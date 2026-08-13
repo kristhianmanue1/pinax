@@ -49,7 +49,6 @@ consume:
 
 - No puedo confirmar la unicidad de `id: argos` ni autorizar su inclusión en el mapa; el contrato de Pinax asigna ambas decisiones al Mediador.
 - No puedo autorizar que este manifiesto se copie al repositorio Argos ni comprometer a Argos a integrarse con Pinax. Este archivo sólo confirma/corrige la autoría de las declaraciones.
-- No identifiqué otra dependencia de ecosistema que Argos declare necesaria. Las dependencias de runtime, extras y desarrollo quedan deliberadamente fuera de `consume` porque el schema asigna su declaración al gestor de paquetes.
 
 ---
 *Agente: OpenAI Codex — Modelo: GPT-5 — Versión: no expuesta por el host — Rol: mantenedor de Argos. Fecha: 2026-08-13*
