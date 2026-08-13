@@ -63,6 +63,17 @@ def test_rechaza_referencia_sin_tipo():
     assert any("referencia tipada" in e for e in pinax.validate(d, "x"))
 
 
+def test_rechaza_paquete_en_consume():
+    d = base() | {"consume": [{"tipo": "paquete", "id": "packaging"}]}
+    errores = pinax.validate(d, "x")
+    assert any("gestor de paquetes" in e for e in errores), errores
+
+
+def test_acepta_paquete_en_publica():
+    d = base() | {"publica": [{"tipo": "paquete", "id": "argos-epistemic"}]}
+    assert not pinax.validate(d, "x")
+
+
 def test_rechaza_tipo_invalido():
     d = base() | {"publica": [{"tipo": "cosa", "id": "x"}]}
     assert any("`tipo`" in e for e in pinax.validate(d, "x"))

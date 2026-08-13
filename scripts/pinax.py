@@ -35,6 +35,9 @@ MANIFEST_NAME = "project-manifest.yaml"
 ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 NS_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$")
 REF_TIPOS = {"contrato", "proyecto", "paquete", "externo"}
+# `consume` es de nivel ecosistema: las dependencias de paquete viven en el
+# gestor de paquetes, que es su hogar canónico. Duplicarlas crea dos fuentes.
+CONSUME_TIPOS = {"contrato", "proyecto", "externo"}
 REF_KEYS = {"tipo", "id", "version", "uso", "requerido"}
 LIST_FIELDS = ("ofrece", "no_ofrece", "fronteras_de_confianza", "pospuesto")
 REF_FIELDS = ("publica", "consume")
@@ -87,8 +90,11 @@ def validate(data: object, origen: str) -> list[str]:
                 continue
             for key in sorted(set(ref) - REF_KEYS):
                 add(f"{where}: clave desconocida {key!r}")
-            if ref.get("tipo") not in REF_TIPOS:
-                add(f"{where}: `tipo` debe ser uno de {sorted(REF_TIPOS)}")
+            permitidos = CONSUME_TIPOS if field == "consume" else REF_TIPOS
+            if ref.get("tipo") not in permitidos:
+                extra = (" — las dependencias de paquete viven en el gestor de paquetes"
+ if ref.get("tipo") == "paquete" else "")
+                add(f"{where}: `tipo` debe ser uno de {sorted(permitidos)}{extra}")
             if not isinstance(ref.get("id"), str) or not ref.get("id"):
                 add(f"{where}: falta `id`")
             if "requerido" in ref and not isinstance(ref["requerido"], bool):

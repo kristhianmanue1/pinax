@@ -76,3 +76,16 @@ esperar a tenerlos todos.**
 Piloto. `fixtures/argos.project-manifest.yaml` es una transcripción **no
 confirmada** por el mantenedor de Argos, y vive aquí — no en Argos. Ningún
 repositorio ha sido modificado.
+
+## Alcance de `consume`
+
+`consume` es de **nivel ecosistema**: proyectos, contratos y sistemas externos.
+Las dependencias de paquete —librerías, runtimes, extras— **no van aquí**: su
+hogar canónico es el manifiesto del gestor de paquetes (`pyproject.toml`,
+`package.json`). El validador rechaza `tipo: paquete` en `consume`.
+
+Motivo: duplicarlas crea dos fuentes que divergen, y convierte el mapa del
+ecosistema en un volcado del gestor de paquetes. El mapa responde *qué proyectos
+se relacionan con cuáles*, no *qué librerías instala cada uno*.
+
+`publica` sí admite `paquete`: publicar un paquete es una relación de ecosistema.

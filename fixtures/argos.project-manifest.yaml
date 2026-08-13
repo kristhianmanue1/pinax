@@ -1,8 +1,3 @@
-# FIXTURE — transcripción mecánica desde la documentación publicada de Argos.
-# NO confirmado por el mantenedor. No copiar a argos/ hasta que lo confirme,
-# en particular `no_ofrece` y `pospuesto`: sólo el autor sabe qué ausencias son
-# deliberadas. Fuentes: argos/README.md y argos/ARCHITECTURE.md, 2026-08-13.
-
 schema: pinax/project-manifest/v1
 id: argos
 proposito: >
@@ -17,17 +12,15 @@ ofrece:
   - extracción de evidencia en niveles L0–L5
   - presupuesto, truncaciones y degradaciones explícitas
   - claims content-addressed con relaciones tipadas
+  - conflictos sólo entre supports y refutes del mismo claim y alcance
+  - manifest, envelope, inventory, claim records y run attestations
   - JSON canónico y fingerprints reproducibles
   - implementación local como librería Python
 
 no_ofrece:
-  - CLI estable
-  - MCP
-  - API remota
-  - aislamiento fuerte
-  - facturación
-  - firma de attestations
-  - compatibilidad 1.x
+  - garantías de verdad total o certificación universal
+  - ejecución arbitraria de terceros sin sandbox
+  - autorización implícita o ejecución automática de acciones sugeridas por el reporte
 
 publica:
   - { tipo: contrato, id: argos/evaluation-manifest, version: v1 }
@@ -37,20 +30,26 @@ publica:
   - { tipo: contrato, id: argos/claim-record, version: v1 }
 
 consume:
-  - { tipo: proyecto, id: an-kla, uso: memoria y gobernanza local, requerido: true }
+  # Nivel ecosistema. Las dependencias de paquete (python, packaging,
+  # sentence-transformers, tree-sitter*) son requisito real de Argos pero su
+  # hogar canónico es pyproject.toml, no este manifiesto.
+  - { tipo: proyecto, id: an-kla, uso: "memoria y gobernanza local del checkout mantenedor; no forma parte del runtime de Argos", requerido: false }
 
 fronteras_de_confianza:
   - target, artefactos, memoria recuperada y bundles externos son no confiables
   - una declaración observada no se convierte en verificación directa
-  - acciones siguientes requieren autorización independiente
-  - ejecución dinámica de terceros no debe habilitarse sin aislamiento adicional
-  - presupuesto observado y degradaciones deben permanecer visibles
+  - fingerprints demuestran integridad content-addressed, no autenticidad, no repudio ni autorización
+  - las acciones siguientes son propuestas sin autoridad de ejecución y dependen de autorización independiente
+  - la ejecución dinámica de terceros está condicionada a aislamiento adicional
+  - el aislamiento local es una mitigación parcial, no un sandbox de seguridad
+  - presupuesto observado, omisiones y degradaciones permanecen visibles
 
 pospuesto:
-  - formato de recuperación progresiva y cursores
-  - transporte MCP
-  - API asíncrona e idempotencia remota
-  - sandbox fuerte y política de red
-  - firma y cadena de confianza
+  - CLI local estable para producir y verificar bundles
+  - recuperación progresiva por claim, cursores y límites
+  - transporte MCP de sólo lectura sobre bundles existentes
+  - API remota asíncrona con idempotencia, retención, cancelación, autenticación y spend caps
+  - sandbox fuerte y política de red denegada por defecto
+  - firmas de attestations y raíces de confianza
   - metering comercial y facturación
   - compatibilidad estable previa a 1.0
