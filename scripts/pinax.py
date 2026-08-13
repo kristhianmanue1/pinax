@@ -94,17 +94,28 @@ def load(path: Path) -> object:
         raise ManifestError(f"YAML malformado: {e}") from e
 
 
-def discover(roots: list[Path]) -> list[tuple[str, Path]]:
-    """(nombre_directorio, ruta_manifiesto_o_None) por cada proyecto bajo las raíces."""
+def discover(
+    roots: list[Path],
+) -> tuple[list[tuple[str, Path | None]], list[str]]:
+    """(nombre, ruta_manifiesto_o_None) por proyecto bajo las raíces, y errores
+    de raíz (ruta inexistente, sin permiso) como texto — nunca traceback."""
     found: list[tuple[str, Path | None]] = []
+    errores: list[str] = []
     for root in roots:
-        if root.is_file():
-            found.append((root.stem, root))
+        try:
+            if root.is_file():
+                found.append((root.stem, root))
+                continue
+            hijos = sorted(
+                p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")
+            )
+        except OSError as e:
+            errores.append(f"{root}: raíz no accesible: {e}")
             continue
-        for child in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        for child in hijos:
             manifest = child / MANIFEST_NAME
             found.append((child.name, manifest if manifest.exists() else None))
-    return found
+    return found, errores
 
 
 class BuildResult(NamedTuple):
@@ -119,9 +130,10 @@ class BuildResult(NamedTuple):
 
 
 def collect(roots: list[Path]) -> BuildResult:
-    faltan, hallazgos = [], []
+    encontrados, errores_raiz = discover(roots)
+    faltan, hallazgos = [], list(errores_raiz)
     candidatas: dict[str, list[tuple[str, dict]]] = {}  # id -> [(origen, data), ...]
-    for nombre, path in discover(roots):
+    for nombre, path in encontrados:
         if path is None:
             faltan.append(nombre)
             continue

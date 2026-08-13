@@ -176,6 +176,24 @@ def test_load_yaml_malformado_es_hallazgo_no_traceback():
         assert any("YAML malformado" in h for h in result.hallazgos)
 
 
+def test_collect_raiz_inexistente_es_hallazgo_no_traceback():
+    # Encontrado en ronda adversarial propia sobre este mismo lote de fixes:
+    # antes de este test, una raíz que no existe crasheaba con
+    # FileNotFoundError crudo en discover() en vez de producir un hallazgo.
+    result = pinax.collect([Path("/no/existe/jamas/en/este/filesystem")])
+    assert not result.ok
+    assert any("no accesible" in h for h in result.hallazgos)
+
+
+def test_main_build_raiz_inexistente_exit_no_cero_sin_traceback():
+    import contextlib, io
+    err = io.StringIO()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+        rc = pinax.main(["build", "/no/existe/jamas/en/este/filesystem"])
+    assert rc != 0
+    assert "Traceback" not in err.getvalue()
+
+
 def test_build_es_adaptador_de_compatibilidad():
     # pinax.build() existía en la API pública; se elimina API rompe a
     # cualquier consumidor que lo importara. Debe seguir funcionando.
