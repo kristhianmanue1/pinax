@@ -40,7 +40,7 @@ fronteras_de_confianza:
   - una declaración observada no se convierte en verificación directa
   - fingerprints demuestran integridad content-addressed, no autenticidad, no repudio ni autorización
   - las acciones siguientes son propuestas sin autoridad de ejecución y dependen de autorización independiente
-  - la ejecución dinámica de terceros está condicionada a aislamiento adicional
+  - la ejecución dinámica de código no confiable está condicionada a aislamiento fuerte proporcionado externamente
   - el aislamiento local es una mitigación parcial, no un sandbox de seguridad
   - presupuesto observado, omisiones y degradaciones permanecen visibles
 

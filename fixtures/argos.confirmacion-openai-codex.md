@@ -26,15 +26,13 @@
 | `no_ofrece.verdad total` | FALTA | Añadir `garantías de verdad total o certificación universal`. Argos declara que un bundle no certifica la verdad completa del sistema. |
 | `no_ofrece.ejecución sin sandbox` | FALTA | Añadir `ejecución arbitraria de terceros sin sandbox`. Es una exclusión explícita y durable; un sandbox fuerte futuro no convierte la ejecución sin aislamiento en capacidad aceptable. |
 | `no_ofrece.autorización implícita` | FALTA | Añadir `autorización implícita o ejecución automática de acciones sugeridas por el reporte`. Las acciones son propuestas y nunca conceden autoridad. |
-| `publica` | CORRECTO | La lista es completa y contiene sólo los cinco JSON Schema normativos publicados: `argos/evaluation-manifest-v1`, `argos/evaluation-envelope-v1`, `argos/discovery-inventory-v1`, `argos/run-attestation-v1` y `argos/claim-record-v1`. La descomposición `id` + `version: v1` representa correctamente esas identidades. `argos/canonical-json-v1`, `argos/claim-component-coverage-v1`, `argos/static-verifier-v1` y perfiles afines son perfiles/protocolos internos públicos, no schemas adicionales en `argos_epistemic.schemas`. |
-| `consume` | CORREGIR | Usar exactamente las referencias del bloque consolidado que aparece debajo de esta tabla. AN-KLA es opcional para el runtime; `packaging` sí es dependencia runtime requerida. Los backends semántico y multilenguaje son extras opcionales. |
+| `publica` | CORRECTO | La lista es completa y contiene sólo los cinco JSON Schema normativos publicados: `argos/evaluation-manifest-v1`, `argos/evaluation-envelope-v1`, `argos/discovery-inventory-v1`, `argos/run-attestation-v1` y `argos/claim-record-v1`. La descomposición `id` + `version: v1` representa correctamente esas identidades. `argos/canonical-json-v1`, `argos/claim-component-coverage-v1`, `argos/static-verifier-v1` y perfiles afines son identificadores de perfil o protocolo de la API, no schemas normativos adicionales en `argos_epistemic.schemas`. |
+| `consume` | CORREGIR | Conservar una sola referencia de ecosistema: AN-KLA con `requerido: false` y el uso corregido del bloque situado debajo de esta tabla. `consume` no duplica runtimes ni dependencias de paquete; su fuente canónica es `pyproject.toml`. |
 | `consume.an-kla.requerido` | CORREGIR | `false`. AN-KLA se usa para memoria y gobernanza local del checkout mantenedor; un consumidor puede instalar y ejecutar `argos-epistemic` sin acceso a AN-KLA. |
 | `consume.an-kla.uso` | CORREGIR | `memoria y gobernanza local del checkout mantenedor; no forma parte del runtime de Argos`. |
-| `consume.packaging` | FALTA | Añadir `packaging`, requerido, para parsing PEP 508, specifiers/markers y normalización de nombres en los verificadores de dependencias. Es la única dependencia Python obligatoria declarada por el paquete. |
-| `consume.python` | FALTA | Añadir `python`, requerido, como runtime de la biblioteca. No se fija una versión en el manifiesto para evitar estado que envejece; el requisito concreto permanece en la metadata del paquete. |
-| `consume.extras` | FALTA | Añadir como no requeridos `sentence-transformers`, `tree-sitter`, `tree-sitter-javascript`, `tree-sitter-typescript`, `tree-sitter-go` y `tree-sitter-rust`; habilitan capacidades opcionales, no el núcleo. |
-| `fronteras_de_confianza` | CORREGIR | Usar exactamente: `target, artefactos, memoria recuperada y bundles externos son no confiables`; `una declaración observada no se convierte en verificación directa`; `fingerprints demuestran integridad content-addressed, no autenticidad, no repudio ni autorización`; `las acciones siguientes son propuestas sin autoridad de ejecución y dependen de autorización independiente`; `la ejecución dinámica de terceros está condicionada a aislamiento adicional`; `el aislamiento local es una mitigación parcial, no un sandbox de seguridad`; `presupuesto observado, omisiones y degradaciones permanecen visibles`. La redacción es declarativa, no imperativa. |
-| `fronteras_de_confianza.ejecución dinámica` | CORREGIR | Sustituir `ejecución dinámica de terceros no debe habilitarse sin aislamiento adicional` por `la ejecución dinámica de terceros está condicionada a aislamiento adicional`. La primera forma contiene un mandato dirigido al consumidor; el manifiesto es dato, no instrucción. |
+| `consume.dependencias de paquete` | CORRECTO | No añadir `python`, `packaging`, `sentence-transformers` ni `tree-sitter*`: aunque son requisitos o extras reales de Argos, el contrato reserva `consume` para dependencias de ecosistema y remite las dependencias de paquete a `pyproject.toml`. |
+| `fronteras_de_confianza` | CORREGIR | Usar exactamente: `target, artefactos, memoria recuperada y bundles externos son no confiables`; `una declaración observada no se convierte en verificación directa`; `fingerprints demuestran integridad content-addressed, no autenticidad, no repudio ni autorización`; `las acciones siguientes son propuestas sin autoridad de ejecución y dependen de autorización independiente`; `la ejecución dinámica de código no confiable está condicionada a aislamiento fuerte proporcionado externamente`; `el aislamiento local es una mitigación parcial, no un sandbox de seguridad`; `presupuesto observado, omisiones y degradaciones permanecen visibles`. La redacción es declarativa, no imperativa. |
+| `fronteras_de_confianza.ejecución dinámica` | CORREGIR | Sustituir `ejecución dinámica de terceros no debe habilitarse sin aislamiento adicional` por `la ejecución dinámica de código no confiable está condicionada a aislamiento fuerte proporcionado externamente`. La primera forma contiene un mandato dirigido al consumidor; la segunda expresa como dato el límite exacto del threat model. |
 | `fronteras_de_confianza.fingerprints` | FALTA | Añadir el límite de autenticidad: los fingerprints detectan alteración dentro de su perfil, pero no autentican al productor ni conceden autoridad. |
 | `pospuesto` | CORREGIR | Usar exactamente: `CLI local estable para producir y verificar bundles`; `recuperación progresiva por claim, cursores y límites`; `transporte MCP de sólo lectura sobre bundles existentes`; `API remota asíncrona con idempotencia, retención, cancelación, autenticación y spend caps`; `sandbox fuerte y política de red denegada por defecto`; `firmas de attestations y raíces de confianza`; `metering comercial y facturación`; `compatibilidad estable previa a 1.0`. Todos tienen intención documentada y permanecen condicionados por los gates del roadmap. |
 | `pospuesto.CLI estable` | FALTA | Añadir explícitamente la CLI local estable; `formato de recuperación progresiva y cursores` no la incluye por sí solo. |
@@ -44,22 +42,14 @@
 
 ```yaml
 consume:
-  - { tipo: externo, id: python, uso: "runtime de la biblioteca", requerido: true }
-  - { tipo: paquete, id: packaging, uso: "parsing PEP 508, specifiers y markers y normalización de nombres de dependencias", requerido: true }
   - { tipo: proyecto, id: an-kla, uso: "memoria y gobernanza local del checkout mantenedor; no forma parte del runtime de Argos", requerido: false }
-  - { tipo: paquete, id: sentence-transformers, uso: "backend semántico denso opcional", requerido: false }
-  - { tipo: paquete, id: tree-sitter, uso: "infraestructura de extractores L3 multilenguaje opcionales", requerido: false }
-  - { tipo: paquete, id: tree-sitter-javascript, uso: "extractor L3 opcional para JavaScript", requerido: false }
-  - { tipo: paquete, id: tree-sitter-typescript, uso: "extractor L3 opcional para TypeScript", requerido: false }
-  - { tipo: paquete, id: tree-sitter-go, uso: "extractor L3 opcional para Go", requerido: false }
-  - { tipo: paquete, id: tree-sitter-rust, uso: "extractor L3 opcional para Rust", requerido: false }
 ```
 
 ## Lo que no pude determinar
 
 - No puedo confirmar la unicidad de `id: argos` ni autorizar su inclusión en el mapa; el contrato de Pinax asigna ambas decisiones al Mediador.
 - No puedo autorizar que este manifiesto se copie al repositorio Argos ni comprometer a Argos a integrarse con Pinax. Este archivo sólo confirma/corrige la autoría de las declaraciones.
-- No determiné una política de Pinax sobre si `consume` debe omitir herramientas exclusivamente de desarrollo (`pytest`, `ruff`, `mypy`, `build`, `twine`, `wheel`, `setuptools`). No son dependencias del runtime ni habilitadores opcionales del producto, por lo que no las incorporé al bloque corregido.
+- No identifiqué otra dependencia de ecosistema que Argos declare necesaria. Las dependencias de runtime, extras y desarrollo quedan deliberadamente fuera de `consume` porque el schema asigna su declaración al gestor de paquetes.
 
 ---
 *Agente: OpenAI Codex — Modelo: GPT-5 — Versión: no expuesta por el host — Rol: mantenedor de Argos. Fecha: 2026-08-13*
