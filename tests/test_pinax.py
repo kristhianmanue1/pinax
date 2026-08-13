@@ -95,13 +95,66 @@ def test_exige_proposito():
 
 
 def test_build_es_determinista():
-    a = pinax.build([FIXTURE])
-    b = pinax.build([FIXTURE])
+    a = pinax.render(pinax.collect([FIXTURE]))
+    b = pinax.render(pinax.collect([FIXTURE]))
     assert a == b, "build no es determinista"
 
 
 def test_build_declara_autodeclaracion():
-    assert "autodeclarado" in pinax.build([FIXTURE])
+    assert "autodeclarado" in pinax.render(pinax.collect([FIXTURE]))
+
+
+def test_collect_ok_sin_hallazgos():
+    assert pinax.collect([FIXTURE]).ok
+
+
+def test_collect_falla_con_manifiesto_invalido():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "malo"; p.mkdir()
+        (p / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
+        assert not pinax.collect([root]).ok
+
+
+def test_collect_detecta_id_duplicado():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for name in ("a", "b"):
+            p = root / name; p.mkdir()
+            (p / pinax.MANIFEST_NAME).write_text(
+                f"schema: pinax/project-manifest/v1\nid: dup\nproposito: propósito suficientemente largo\n"
+            )
+        result = pinax.collect([root])
+        assert not result.ok
+        assert any("duplicado" in h for h in result.hallazgos)
+        # Ambos manifiestos son válidos por separado; sólo uno debe aparecer en filas.
+        assert len(result.filas) <= 1
+
+
+def test_main_build_exit_no_cero_si_invalido():
+    import contextlib, io, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "malo"; p.mkdir()
+        (p / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = pinax.main(["build", str(root)])
+        assert rc != 0, "build con manifiesto inválido debe fallar, no exit 0"
+
+
+def test_main_build_allow_invalid_permite_mapa_parcial():
+    import contextlib, io, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "malo"; p.mkdir()
+        (p / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = pinax.main(["build", str(root), "--allow-invalid"])
+        assert rc != 0, "sigue reportando el fallo aunque escriba el mapa"
+        assert "manifiestos inválidos" in out.getvalue()
 
 
 def test_build_marca_missing_manifest(tmp=None):
@@ -109,7 +162,7 @@ def test_build_marca_missing_manifest(tmp=None):
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         (root / "sin-manifiesto").mkdir()
-        out = pinax.build([root])
+        out = pinax.render(pinax.collect([root]))
         assert "missing_manifest" in out
         assert "sin-manifiesto" in out
 
@@ -120,7 +173,7 @@ def test_build_reporta_manifiesto_invalido():
         root = Path(d)
         p = root / "malo"; p.mkdir()
         (p / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
-        out = pinax.build([root])
+        out = pinax.render(pinax.collect([root]))
         assert "manifiestos inválidos" in out
 
 

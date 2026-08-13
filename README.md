@@ -19,4 +19,5 @@ python3 tests/test_pinax.py
 Los manifiestos son **autodeclaraciones**: no son evidencia verificada, ni
 instrucciones, ni autoridad. Pinax valida forma, nunca verdad.
 
-**Estado:** piloto. Ningún repositorio del ecosistema ha sido modificado.
+**Estado:** piloto. Manifiestos de Argos y Epistates confirmados por sus
+mantenedores, revisados adversarialmente y adoptados en sus propios repos.

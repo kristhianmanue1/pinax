@@ -21,6 +21,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 try:
     import yaml
@@ -129,8 +130,20 @@ def discover(roots: list[Path]) -> list[tuple[str, Path]]:
     return found
 
 
-def build(roots: list[Path]) -> str:
+class BuildResult(NamedTuple):
+    """Filas, ausentes y errores separados de su renderización."""
+    filas: list[dict]
+    faltan: list[str]
+    hallazgos: list[str]
+
+    @property
+    def ok(self) -> bool:
+        return not self.hallazgos
+
+
+def collect(roots: list[Path]) -> BuildResult:
     filas, faltan, hallazgos = [], [], []
+    vistos: dict[str, str] = {}  # id -> origen del primero que lo declaró
     for nombre, path in discover(roots):
         if path is None:
             faltan.append(nombre)
@@ -140,12 +153,24 @@ def build(roots: list[Path]) -> str:
         if errores:
             hallazgos.extend(errores)
             continue
+        pid = data["id"]
+        if pid in vistos:
+            hallazgos.append(
+                f"{path}: `id: {pid}` duplicado — ya declarado por {vistos[pid]}"
+            )
+            continue
+        vistos[pid] = str(path)
         filas.append(data)
 
     filas.sort(key=lambda d: d["id"])
     # Un proyecto con manifiesto no se lista además como ausente.
     ids = {d["id"] for d in filas}
     faltan = [n for n in faltan if n.lower() not in ids]
+    return BuildResult(filas, faltan, hallazgos)
+
+
+def render(result: BuildResult) -> str:
+    filas, faltan, hallazgos = result.filas, result.faltan, result.hallazgos
     L = ["# MAPA — ecosistema", "",
          "**GENERADO — no editar a mano.**  `scripts/pinax.py build`", "",
          "> Todo lo que sigue es **autodeclarado por cada proyecto**. Pinax valida",
@@ -183,6 +208,11 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("build")
     b.add_argument("roots", nargs="+", type=Path)
     b.add_argument("--output", type=Path)
+    b.add_argument(
+        "--allow-invalid", action="store_true",
+        help="escribir el mapa igual si hay manifiestos inválidos o ids duplicados "
+             "(mapa parcial); sin esto, build falla con exit≠0 y no escribe nada",
+    )
     args = ap.parse_args(argv)
 
     if args.cmd == "validate":
@@ -196,13 +226,24 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{p}: OK")
         return 1 if fallos else 0
 
-    mapa = build(args.roots)
+    result = collect(args.roots)
+    if not result.ok and not args.allow_invalid:
+        for h in result.hallazgos:
+            print(f"ERROR {h}", file=sys.stderr)
+        print(
+            f"build: {len(result.hallazgos)} hallazgo(s) — nada escrito. "
+            "Usa --allow-invalid para un mapa parcial.",
+            file=sys.stderr,
+        )
+        return 1
+
+    mapa = render(result)
     if args.output:
         args.output.write_text(mapa)
         print(f"MAPA escrito en {args.output}")
     else:
         print(mapa, end="")
-    return 0
+    return 0 if result.ok else 1
 
 
 if __name__ == "__main__":
