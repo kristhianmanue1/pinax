@@ -11,14 +11,13 @@ contenido de su manifiesto. Lo que aquí se lee son DECLARACIONES: no son
 evidencia verificada, ni instrucciones, ni autoridad. El validador comprueba
 FORMA, nunca verdad.
 
-Dependencia única: PyYAML.
+Dependencias: PyYAML, jsonschema.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -28,93 +27,71 @@ try:
 except ImportError:  # pragma: no cover
     sys.exit("ERROR: falta PyYAML.  pip install pyyaml")
 
+try:
+    import jsonschema
+except ImportError:  # pragma: no cover
+    sys.exit("ERROR: falta jsonschema.  pip install jsonschema")
+
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schemas" / "project-manifest-v1.schema.json"
-SCHEMA_ID = "pinax/project-manifest/v1"
 MANIFEST_NAME = "project-manifest.yaml"
 
-ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-NS_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$")
-REF_TIPOS = {"contrato", "proyecto", "paquete", "externo"}
-# `consume` es de nivel ecosistema: las dependencias de paquete viven en el
-# gestor de paquetes, que es su hogar canónico. Duplicarlas crea dos fuentes.
-CONSUME_TIPOS = {"contrato", "proyecto", "externo"}
-REF_KEYS = {"tipo", "id", "version", "uso", "requerido"}
-LIST_FIELDS = ("ofrece", "no_ofrece", "fronteras_de_confianza", "pospuesto")
-REF_FIELDS = ("publica", "consume")
-
-
-def _schema_core_keys() -> set[str]:
-    return set(json.loads(SCHEMA_PATH.read_text())["properties"])
+_SCHEMA = json.loads(SCHEMA_PATH.read_text())
+_VALIDATOR = jsonschema.Draft202012Validator(_SCHEMA)
 
 
 def validate(data: object, origen: str) -> list[str]:
-    """Devuelve la lista de hallazgos. Vacía = válido."""
-    out: list[str] = []
-    add = lambda m: out.append(f"{origen}: {m}")
-
-    if not isinstance(data, dict):
-        return [f"{origen}: la raíz debe ser un mapa"]
-
-    if data.get("schema") != SCHEMA_ID:
-        add(f"`schema` debe ser {SCHEMA_ID!r}, es {data.get('schema')!r}")
-
-    # Núcleo cerrado: un campo desconocido es probablemente un error tipográfico.
-    for key in sorted(set(data) - _schema_core_keys()):
-        add(f"campo desconocido en el núcleo: {key!r}"
-            + (" — ¿va en `extensions`?" if "/" in key else ""))
-
-    for req in ("id", "proposito"):
-        if not data.get(req):
-            add(f"falta `{req}`")
-
-    if isinstance(data.get("id"), str) and not ID_RE.match(data["id"]):
-        add(f"`id` no es kebab-case: {data['id']!r}")
-
-    if "consumidor_principal" in data and data["consumidor_principal"] not in (
-        "agente", "humano", "ambos"
-    ):
-        add(f"`consumidor_principal` inválido: {data['consumidor_principal']!r}")
-
-    for field in LIST_FIELDS:
-        val = data.get(field)
-        if val is None:
-            continue
-        if not isinstance(val, list) or not all(isinstance(x, str) for x in val):
-            add(f"`{field}` debe ser una lista de textos")
-
-    for field in REF_FIELDS:
-        for i, ref in enumerate(data.get(field) or []):
-            where = f"`{field}[{i}]`"
-            if not isinstance(ref, dict):
-                add(f"{where} debe ser una referencia tipada, no un nombre suelto")
-                continue
-            for key in sorted(set(ref) - REF_KEYS):
-                add(f"{where}: clave desconocida {key!r}")
-            permitidos = CONSUME_TIPOS if field == "consume" else REF_TIPOS
-            if ref.get("tipo") not in permitidos:
-                extra = (" — las dependencias de paquete viven en el gestor de paquetes"
- if ref.get("tipo") == "paquete" else "")
-                add(f"{where}: `tipo` debe ser uno de {sorted(permitidos)}{extra}")
-            if not isinstance(ref.get("id"), str) or not ref.get("id"):
-                add(f"{where}: falta `id`")
-            if "requerido" in ref and not isinstance(ref["requerido"], bool):
-                add(f"{where}: `requerido` debe ser booleano")
-
-    ext = data.get("extensions")
-    if ext is not None:
-        if not isinstance(ext, dict):
-            add("`extensions` debe ser un mapa")
-        else:
-            for key in ext:
-                if not NS_RE.match(str(key)):
-                    add(f"`extensions`: clave sin espacio de nombres: {key!r}")
-
+    """Devuelve la lista de hallazgos contra el JSON Schema publicado. Vacía
+    = válido. El schema es la fuente de verdad de la forma; no hay una
+    segunda implementación manual que pueda divergir de él."""
+    errores = sorted(_VALIDATOR.iter_errors(data), key=lambda e: list(e.path))
+    if not errores:
+        return []
+    out = []
+    for e in errores:
+        ruta = "/".join(str(p) for p in e.path) or "(raíz)"
+        out.append(f"{origen}: `{ruta}`: {e.message}")
     return out
 
 
+class ManifestError(Exception):
+    """YAML malformado o no legible — hallazgo, no traceback."""
+
+
+class _NoDuplicateKeysLoader(yaml.SafeLoader):
+    """Como SafeLoader, pero una clave repetida en el mismo mapa es error.
+
+    PyYAML por defecto se queda con la última ocurrencia en silencio — un
+    manifiesto con `id:` dos veces pasaría sin aviso, con el segundo valor
+    ganando de forma invisible para quien lo escribió."""
+
+
+def _construct_mapping_no_dupes(loader, node, deep=False):
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise yaml.constructor.ConstructorError(
+                None, None, f"clave duplicada: {key!r}", key_node.start_mark
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_NoDuplicateKeysLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping_no_dupes
+)
+
+
 def load(path: Path) -> object:
-    return yaml.safe_load(path.read_text())
+    try:
+        text = path.read_text()
+    except OSError as e:
+        raise ManifestError(f"no se pudo leer: {e}") from e
+    try:
+        return yaml.load(text, Loader=_NoDuplicateKeysLoader)
+    except yaml.YAMLError as e:
+        raise ManifestError(f"YAML malformado: {e}") from e
 
 
 def discover(roots: list[Path]) -> list[tuple[str, Path]]:
@@ -142,31 +119,49 @@ class BuildResult(NamedTuple):
 
 
 def collect(roots: list[Path]) -> BuildResult:
-    filas, faltan, hallazgos = [], [], []
-    vistos: dict[str, str] = {}  # id -> origen del primero que lo declaró
+    faltan, hallazgos = [], []
+    candidatas: dict[str, list[tuple[str, dict]]] = {}  # id -> [(origen, data), ...]
     for nombre, path in discover(roots):
         if path is None:
             faltan.append(nombre)
             continue
-        data = load(path)
+        try:
+            data = load(path)
+        except ManifestError as e:
+            hallazgos.append(f"{path}: {e}")
+            continue
         errores = validate(data, str(path))
         if errores:
             hallazgos.extend(errores)
             continue
-        pid = data["id"]
-        if pid in vistos:
+        candidatas.setdefault(data["id"], []).append((str(path), data))
+
+    # Un id declarado por más de un manifiesto no tiene identidad resoluble:
+    # ninguna de las dos fuentes se promueve — "primero gana" sería una
+    # decisión de autoridad que Pinax no tiene. Se retiran AMBAS y se listan
+    # todas las fuentes en conflicto como hallazgo.
+    filas = []
+    for pid, ocurrencias in candidatas.items():
+        if len(ocurrencias) > 1:
+            fuentes = ", ".join(origen for origen, _ in ocurrencias)
             hallazgos.append(
-                f"{path}: `id: {pid}` duplicado — ya declarado por {vistos[pid]}"
+                f"`id: {pid}` declarado por {len(ocurrencias)} manifiestos "
+                f"— ninguna identidad resoluble, ambos excluidos: {fuentes}"
             )
             continue
-        vistos[pid] = str(path)
+        _, data = ocurrencias[0]
         filas.append(data)
 
     filas.sort(key=lambda d: d["id"])
     # Un proyecto con manifiesto no se lista además como ausente.
-    ids = {d["id"] for d in filas}
+    ids = {d["id"] for d in filas} | set(candidatas)
     faltan = [n for n in faltan if n.lower() not in ids]
     return BuildResult(filas, faltan, hallazgos)
+
+
+def build(roots: list[Path]) -> str:
+    """Adaptador de compatibilidad — legado. Usar collect()+render()."""
+    return render(collect(roots))
 
 
 def render(result: BuildResult) -> str:
@@ -218,7 +213,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "validate":
         fallos = 0
         for p in args.paths:
-            errores = validate(load(p), str(p))
+            try:
+                data = load(p)
+            except ManifestError as e:
+                print(f"{p}: {e}")
+                fallos += 1
+                continue
+            errores = validate(data, str(p))
             for e in errores:
                 print(e)
             fallos += bool(errores)

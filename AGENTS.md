@@ -56,7 +56,7 @@ python3 scripts/pinax.py build <raíz>... --output MAPA.md
 python3 tests/test_pinax.py
 ```
 
-Dependencia única: PyYAML.
+Dependencias: PyYAML, jsonschema.
 
 ## Adopción de un proyecto
 

@@ -55,18 +55,18 @@ def test_acepta_extensions_con_namespace():
 
 def test_rechaza_extension_sin_namespace():
     d = base() | {"extensions": {"fase": "F3"}}
-    assert any("espacio de nombres" in e for e in pinax.validate(d, "x"))
+    assert any("`extensions`" in e for e in pinax.validate(d, "x"))
 
 
 def test_rechaza_referencia_sin_tipo():
     d = base() | {"publica": ["claim-record-v1"]}
-    assert any("referencia tipada" in e for e in pinax.validate(d, "x"))
+    assert any("`publica" in e for e in pinax.validate(d, "x"))
 
 
 def test_rechaza_paquete_en_consume():
     d = base() | {"consume": [{"tipo": "paquete", "id": "packaging"}]}
     errores = pinax.validate(d, "x")
-    assert any("gestor de paquetes" in e for e in errores), errores
+    assert any("`consume" in e and "paquete" in e for e in errores), errores
 
 
 def test_acepta_paquete_en_publica():
@@ -76,7 +76,7 @@ def test_acepta_paquete_en_publica():
 
 def test_rechaza_tipo_invalido():
     d = base() | {"publica": [{"tipo": "cosa", "id": "x"}]}
-    assert any("`tipo`" in e for e in pinax.validate(d, "x"))
+    assert any("tipo" in e for e in pinax.validate(d, "x"))
 
 
 def test_rechaza_schema_ausente_o_distinto():
@@ -86,7 +86,7 @@ def test_rechaza_schema_ausente_o_distinto():
 
 def test_rechaza_id_no_kebab():
     d = base() | {"id": "Ejemplo_Malo"}
-    assert any("kebab-case" in e for e in pinax.validate(d, "x"))
+    assert any("`id`" in e for e in pinax.validate(d, "x"))
 
 
 def test_exige_proposito():
@@ -117,7 +117,28 @@ def test_collect_falla_con_manifiesto_invalido():
         assert not pinax.collect([root]).ok
 
 
-def test_collect_detecta_id_duplicado():
+def test_collect_id_duplicado_excluye_ambas_fuentes():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for name in ("a", "b"):
+            p = root / name; p.mkdir()
+            (p / pinax.MANIFEST_NAME).write_text(
+                f"schema: pinax/project-manifest/v1\nid: dup\nproposito: propósito suficientemente largo ({name})\n"
+            )
+        result = pinax.collect([root])
+        assert not result.ok
+        assert any("declarado por 2 manifiestos" in h for h in result.hallazgos)
+        # "primero gana" sería una decisión de autoridad que Pinax no tiene:
+        # un id sin identidad resoluble no aparece EN ABSOLUTO en filas, ni
+        # el mapa ni el mapa parcial deben mostrar ninguna de las dos fuentes
+        # como si fuera la elegida.
+        assert not any(fila["id"] == "dup" for fila in result.filas)
+        out = pinax.render(result)
+        assert "propósito suficientemente largo" not in out
+
+
+def test_collect_id_duplicado_no_reaparece_como_missing():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
@@ -127,10 +148,38 @@ def test_collect_detecta_id_duplicado():
                 f"schema: pinax/project-manifest/v1\nid: dup\nproposito: propósito suficientemente largo\n"
             )
         result = pinax.collect([root])
+        # Excluido por conflicto, no por ausencia: no debe listarse como
+        # missing_manifest, que significaría algo distinto (nadie lo declaró).
+        assert "a" not in result.faltan and "b" not in result.faltan
+
+
+def test_load_rechaza_claves_duplicadas():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        p = Path(d) / "dup.yaml"
+        p.write_text("schema: pinax/project-manifest/v1\nid: x\nid: y\nproposito: p suficientemente largo\n")
+        try:
+            pinax.load(p)
+            assert False, "debía rechazar clave 'id' repetida"
+        except pinax.ManifestError:
+            pass
+
+
+def test_load_yaml_malformado_es_hallazgo_no_traceback():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "roto"; p.mkdir()
+        (p / pinax.MANIFEST_NAME).write_text("schema: [esto no cierra\n")
+        result = pinax.collect([root])
         assert not result.ok
-        assert any("duplicado" in h for h in result.hallazgos)
-        # Ambos manifiestos son válidos por separado; sólo uno debe aparecer en filas.
-        assert len(result.filas) <= 1
+        assert any("YAML malformado" in h for h in result.hallazgos)
+
+
+def test_build_es_adaptador_de_compatibilidad():
+    # pinax.build() existía en la API pública; se elimina API rompe a
+    # cualquier consumidor que lo importara. Debe seguir funcionando.
+    assert pinax.build([FIXTURE]) == pinax.render(pinax.collect([FIXTURE]))
 
 
 def test_main_build_exit_no_cero_si_invalido():
