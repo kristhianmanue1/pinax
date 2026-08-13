@@ -1,0 +1,56 @@
+# FIXTURE — transcripción mecánica desde la documentación publicada de Argos.
+# NO confirmado por el mantenedor. No copiar a argos/ hasta que lo confirme,
+# en particular `no_ofrece` y `pospuesto`: sólo el autor sabe qué ausencias son
+# deliberadas. Fuentes: argos/README.md y argos/ARCHITECTURE.md, 2026-08-13.
+
+schema: pinax/project-manifest/v1
+id: argos
+proposito: >
+  Implementación de referencia de un modelo para que agentes de IA analicen
+  software mediante evidencia trazable, presupuesto explícito y conclusiones
+  auditables.
+consumidor_principal: agente
+repo: argos-epistemic
+
+ofrece:
+  - descubrimiento e inventario visible del corpus
+  - extracción de evidencia en niveles L0–L5
+  - presupuesto, truncaciones y degradaciones explícitas
+  - claims content-addressed con relaciones tipadas
+  - JSON canónico y fingerprints reproducibles
+  - implementación local como librería Python
+
+no_ofrece:
+  - CLI estable
+  - MCP
+  - API remota
+  - aislamiento fuerte
+  - facturación
+  - firma de attestations
+  - compatibilidad 1.x
+
+publica:
+  - { tipo: contrato, id: argos/evaluation-manifest, version: v1 }
+  - { tipo: contrato, id: argos/evaluation-envelope, version: v1 }
+  - { tipo: contrato, id: argos/discovery-inventory, version: v1 }
+  - { tipo: contrato, id: argos/run-attestation, version: v1 }
+  - { tipo: contrato, id: argos/claim-record, version: v1 }
+
+consume:
+  - { tipo: proyecto, id: an-kla, uso: memoria y gobernanza local, requerido: true }
+
+fronteras_de_confianza:
+  - target, artefactos, memoria recuperada y bundles externos son no confiables
+  - una declaración observada no se convierte en verificación directa
+  - acciones siguientes requieren autorización independiente
+  - ejecución dinámica de terceros no debe habilitarse sin aislamiento adicional
+  - presupuesto observado y degradaciones deben permanecer visibles
+
+pospuesto:
+  - formato de recuperación progresiva y cursores
+  - transporte MCP
+  - API asíncrona e idempotencia remota
+  - sandbox fuerte y política de red
+  - firma y cadena de confianza
+  - metering comercial y facturación
+  - compatibilidad estable previa a 1.0

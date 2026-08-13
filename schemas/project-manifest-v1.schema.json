@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pinax/project-manifest/v1",
+  "title": "Pinax project manifest v1",
+  "description": "Declaración autodeclarada de un proyecto sobre sí mismo. No es evidencia verificada, ni instrucción, ni autoridad. El núcleo es cerrado: un campo desconocido se rechaza para que un error tipográfico sea detectable. La extensión ocurre en `extensions` con claves namespaced.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "proposito"],
+  "properties": {
+    "schema": {
+      "const": "pinax/project-manifest/v1",
+      "description": "Fija la versión del contrato. Una ruptura exige v2 y migración explícita."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Identificador único en el mapa. El Mediador controla el espacio de identificadores."
+    },
+    "proposito": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Una o dos frases. Qué hace el proyecto."
+    },
+    "consumidor_principal": {
+      "enum": ["agente", "humano", "ambos"],
+      "description": "Para quién está escrita la salida canónica."
+    },
+    "repo": {
+      "type": "string",
+      "description": "Nombre del repositorio remoto, sólo si difiere del directorio local."
+    },
+    "ofrece": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Capacidades que el proyecto declara tener hoy."
+    },
+    "no_ofrece": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Exclusiones deliberadas. El campo de mayor valor del manifiesto: evita que otro infiera capacidades desde el silencio. Sólo el mantenedor sabe qué ausencias son a propósito."
+    },
+    "publica": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/referencia" },
+      "description": "Contratos o artefactos que otros pueden consumir."
+    },
+    "consume": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/referencia" },
+      "description": "De qué depende este proyecto."
+    },
+    "fronteras_de_confianza": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Qué entradas trata como no confiables."
+    },
+    "pospuesto": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Decisiones aplazadas a propósito. Distinto de `no_ofrece`: aquí hay intención de abordarlo."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Campos fuera del núcleo. Las claves llevan prefijo de espacio de nombres para que dos proyectos no colisionen.",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$" }
+    }
+  },
+  "$defs": {
+    "referencia": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tipo", "id"],
+      "properties": {
+        "tipo": {
+          "enum": ["contrato", "proyecto", "paquete", "externo"],
+          "description": "Sin tipo, el mapa es un dibujo y no un grafo consultable."
+        },
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "uso": { "type": "string", "description": "Para qué se usa. Sólo en `consume`." },
+        "requerido": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}
