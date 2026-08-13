@@ -73,9 +73,13 @@ esperar a tenerlos todos.**
 
 ## Estado
 
-Piloto. `fixtures/argos.project-manifest.yaml` es una transcripción **no
-confirmada** por el mantenedor de Argos, y vive aquí — no en Argos. Ningún
-repositorio ha sido modificado.
+Piloto. Manifiestos de Argos y Epistates confirmados, revisados
+adversarialmente y adoptados en sus repos.
+
+Registro narrativo del ecosistema (decisiones, no manifiestos):
+`kratos/docs/auditorias/` — orden cronológico por nombre de archivo. Útil para
+trabajo a nivel de ecosistema (adopción, mapa); un agente aislado en un solo
+proyecto no necesita leerlo.
 
 ## Alcance de `consume`
 
