@@ -64,10 +64,18 @@ Aprendido depurando en vivo (2026-08-20) — confirma lo que
 
 ## Checkpoint de cierre (continuidad día a día)
 
-Flujo: `checkpoint plan --input <working-state.json> --authority <a.json>`
+Flujo: `--input` lleva **sólo el working-state** (el CLI construye el
+proposal con `base_revision`/`parent_checkpoint` observados — no le pases
+un proposal completo, lo rechaza como `invalid_working_state`).
+`checkpoint plan --input <working-state.json> --authority <a.json>`
 → `checkpoint commit --plan <plan> --expected-current <sha256>
---transaction-id <uuid>`. Un JSON del caller no puede declarar
+--transaction-id <uuid minúsculas>`. Un JSON del caller no puede declarar
 `tool_observed`; esa procedencia requiere adaptador del host.
+
+Desde **beta.16** (ADR-0038) el checkpoint admite `source_state`
+`git/v1` con `head`/`branch`/`dirty_digest` como `caller_asserted` — yo
+observo Git y lo declaro; el CLI no ejecuta Git. Primer uso:
+checkpoint rev 12 (2026-08-20, head `66451004`).
 
 ## Lecciones de método registradas
 
@@ -84,6 +92,10 @@ Flujo: `checkpoint plan --input <working-state.json> --authority <a.json>`
    proyecto, `context status` debe dar `installed: true, ok: true,
    diagnostics: []` — si no, faltan `context plan --operation install` +
    `context install` (error real aquí, 2026-08-20, corregido en `da7764a`).
-6. `source_state` `git/v1` del checkpoint requiere adaptador del host
-   (`tool_observed_requires_adapter`); no basta actualizar la beta ni
-   declararlo a mano — `caller_asserted` se rechaza por diseño.
+6. ~~`source_state` `git/v1` requiere adaptador del host~~ —
+   **SUPERSEDED por beta.16** (mismo día, 2026-08-20): en beta.15 `git/v1`
+   no existía y el error `tool_observed_requires_adapter` parecía decir
+   que `caller_asserted` era rechazado por diseño; beta.16 lo introdujo
+   exactamente como `caller_asserted`. Lección dentro de la lección:
+   una restricción observada en una versión no es una regla de diseño —
+   verificar contra el ADR/changelog antes de normar.

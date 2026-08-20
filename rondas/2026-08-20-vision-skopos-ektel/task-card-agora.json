@@ -1,0 +1,38 @@
+{
+  "schema": "epistates/task-card/v1",
+  "task_id": "agora-fundacion-validador-frontmatter",
+  "objective": "Fundacion simple de agora (decision del dueno 2026-08-20, sin CAGF ni ektel): (1) validador ejecutable de front-matter con exit 1 ante violaciones (7 campos, unicidad de id, integridad de superado_por, laterales de binarios), Python stdlib puro, espiritu de escrubery/scripts/check_sizes.py; (2) actualizar AGENTS.md marcando el chequeo como implementado; (3) depositar dos artefactos con front-matter propio: copia de la vision firmada de pinax (pinax/rondas/2026-08-20-vision-skopos-ektel/vision-final-firmada.md) y un registro nuevo de que el hueco del estandar huerfano (manifiesto+auditor) esta cubierto de facto por pinax, derivado_de estado-estandar-huerfano. Encargo completo con rutas absolutas en /Users/krisnova/www/pinax/rondas/2026-08-20-vision-skopos-ektel/instruccion-agente-agora.md.",
+  "target": {
+    "repository": "agora",
+    "base_sha": "7a67606e4f51cbacfc8cc6f7388b496959137fd3",
+    "branch": "main",
+    "worktree": "/Users/krisnova/www/aria/agora"
+  },
+  "role": "developer",
+  "authority": {
+    "grant_id": "dueno-2026-08-20-agora",
+    "granted_by": "maintainer",
+    "granted_actions": ["read", "edit", "run_checks"],
+    "protected_operations_authorized": []
+  },
+  "allowed_paths": ["scripts/", "AGENTS.md", "*.md"],
+  "allowed_actions": ["read", "edit", "run_checks"],
+  "forbidden_operations": ["commit", "push", "open_pr", "merge", "release", "install_dependencies", "change_scope", "git_reset", "create_branch", "delete_branch", "create_worktree", "remove_worktree"],
+  "inputs": [
+    "AGENTS.md",
+    "2026-08-13-estado-estandar-huerfano.md"
+  ],
+  "checks": [
+    {
+      "check_id": "unit_tests",
+      "expected": "python3 scripts/check_agora.py (o nombre elegido) termina exit 0 con los artefactos existentes y los dos nuevos"
+    }
+  ],
+  "evidence": {
+    "report_format": "rag/v1",
+    "required": ["worktree_status", "diff_check", "check_results"]
+  },
+  "delivery": "Reporte RAG: diff leido completo, salida del validador, lista de archivos creados. Espanol.",
+  "stop_condition": "Detenerse y reportar si: el parseo de front-matter exige una dependencia externa (decision del dueno), o el alcance pedido excede allowed_paths.",
+  "new_decision_required_for": ["cualquier operacion Git (commit/push/merge)", "instalar dependencias nuevas", "decision sobre binarios (LFS vs blobs)", "construir el catalogo/vista generada", "integrar CAGF, ektel o AN-KLA", "modificar el artefacto existente de Claude"]
+}
