@@ -80,3 +80,10 @@ Flujo: `checkpoint plan --input <working-state.json> --authority <a.json>`
    proyecto ya tiene guía de notas aprendidas (mi fallo
    `authority_scope_mismatch` ya estaba resuelto en la guía de escrubery).
 4. Toda métrica citada va fechada como snapshot (X-2 de Codex).
+5. `init` **no** instala el bloque gestionado: tras instalar AN-KLA en un
+   proyecto, `context status` debe dar `installed: true, ok: true,
+   diagnostics: []` — si no, faltan `context plan --operation install` +
+   `context install` (error real aquí, 2026-08-20, corregido en `da7764a`).
+6. `source_state` `git/v1` del checkpoint requiere adaptador del host
+   (`tool_observed_requires_adapter`); no basta actualizar la beta ni
+   declararlo a mano — `caller_asserted` se rechaza por diseño.
