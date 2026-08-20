@@ -93,3 +93,12 @@ ecosistema en un volcado del gestor de paquetes. El mapa responde *qué proyecto
 se relacionan con cuáles*, no *qué librerías instala cada uno*.
 
 `publica` sí admite `paquete`: publicar un paquete es una relación de ecosistema.
+
+## Memoria y política de agentes
+
+Este proyecto usa memoria local AN-KLA (instalada 2026-08-20, tag
+`v0.1.0-beta.15`, `.an-kla/` gitignored). Antes de trabajo material:
+`docs/guia-an-kla-pinax.md` — su protocolo de arranque (`status → verify →
+checkpoint show → resume`) es **condición de operación**: si `verify`
+falla, no se opera y se reporta. Cómo se despachan y aceptan encargos:
+`docs/politica-agentes-pinax.md`.
