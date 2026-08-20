@@ -70,6 +70,10 @@ Guías de notas aprendidas (leer antes de depurar):
 ## Estado de este documento
 
 Temporal: su contenido durable vive en la memoria AN-KLA de pinax
-(episodio `episodio-rondas-vision-2026-08-20` + checkpoint de cierre) y en
-los commits. Cuando el mapa (MAPA.md) incluya estos estados, este archivo
-puede borrarse.
+(episodios `episodio-rondas-vision-2026-08-20` y
+`episodio-tooling-pinax-2026-08-20` + checkpoint de cierre) y en los
+commits. El análisis de **qué herramienta debe garantizar cada pieza de
+este documento** (y cuándo puede borrarse) está en
+`docs/analisis-garantias-2026-08-20.md` — léelo antes de replicar este
+patrón en otro proyecto. Cuando el mapa (MAPA.md) incluya estos estados y
+el manifiesto tenga campo `descubrimiento`, este archivo puede borrarse.
