@@ -1,0 +1,43 @@
+{
+  "schema": "epistates/task-card/v1",
+  "task_id": "skopos-sanear-base-y-multicli",
+  "objective": "Ejecutar el ciclo de saneamiento de Skopos en el orden de P-001 v4 §5: (1) C-9 eje de proyecto (y cli_origen) en el documento Mongo y en skopos query; (2) C-8 ADR nuevo con alternativas de superficie de mutacion o retencion (la eleccion es del dueno); (3) C-10 cursor de ingesta, acotando ADR-005 y cerrando la decision 8 de docs/hoja-de-ruta.md (la politica de arranque la decide el dueno); (4) C-6 decision sobre fragmento_completo con cuatro opciones incluida persistir o sellar con hash+tamano (decision del dueno); (5) C-5 ejecutar el detector corregido de P-001 §4.5 contra corpus poblado. Despues: ensayo REQ-10 contra /Users/krisnova/www/aria/escrubery (opcional y no bloqueante segun ADR-004) y propuesta de contrato de parser por CLI indexado por (cli, version). P-001 queda superada por decision del dueno 2026-08-20 (Skopos sera multi-CLI): anotar estado y fecha en la propuesta, no reabrirla. Encargo completo y rutas absolutas en /Users/krisnova/www/pinax/rondas/2026-08-20-vision-skopos-ektel/instruccion-agente-skopos.md. Toda metrica citada va fechada como snapshot.",
+  "target": {
+    "repository": "skopos",
+    "base_sha": "124d31c1caa174ef6fb03b34726bae2f114f5409",
+    "branch": "main",
+    "worktree": "/Users/krisnova/www/aria/skopos"
+  },
+  "role": "developer",
+  "authority": {
+    "grant_id": "dueno-2026-08-20-skopos",
+    "granted_by": "maintainer",
+    "granted_actions": ["read", "edit", "run_checks"],
+    "protected_operations_authorized": []
+  },
+  "allowed_paths": ["src/", "tests/", "docs/", "README.md", "pyproject.toml"],
+  "allowed_actions": ["read", "edit", "run_checks"],
+  "forbidden_operations": ["commit", "push", "open_pr", "merge", "release", "install_dependencies", "change_scope", "git_reset", "create_branch", "delete_branch", "create_worktree", "remove_worktree"],
+  "inputs": [
+    "AGENTS.md",
+    "docs/guia-rapida.md",
+    "docs/hoja-de-ruta.md",
+    "docs/propuestas/P-001-integracion-an-kla-memory.md",
+    "docs/adr/ADR-004-escrubery-fuente-opcional.md",
+    "docs/adr/ADR-005-deduplicacion-via-mongo.md",
+    "README.md"
+  ],
+  "checks": [
+    {
+      "check_id": "unit_tests",
+      "expected": "python3 -m unittest discover -s tests termina en verde (exit 0)"
+    }
+  ],
+  "evidence": {
+    "report_format": "rag/v1",
+    "required": ["worktree_status", "diff_check", "check_results"]
+  },
+  "delivery": "Reporte RAG con comandos y resultados; ADRs nuevos en docs/adr/ para C-8, C-10 y el contrato de parser por CLI; SPEC nueva para cada frontera nueva; decisiones marcadas como del dueno se preparan, no se toman.",
+  "stop_condition": "Detenerse y reportar si: una decision marcada como del dueno bloquea el avance, MongoDB u Ollama no responden, o el alcance pedido excede allowed_paths.",
+  "new_decision_required_for": ["cualquier operacion Git (commit/push/merge)", "instalar dependencias nuevas", "elegir entre mutacion y retencion (C-8)", "politica de arranque del vigilante (decision 8)", "decision sobre fragmento_completo (C-6)", "agregar un segundo CLI antes de cerrar C-9/C-8/C-10", "reabrir P-001 o integrar con AN-KLA", "busqueda semantica/embeddings"]
+}

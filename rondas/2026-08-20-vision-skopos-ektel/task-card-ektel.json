@@ -1,0 +1,43 @@
+{
+  "schema": "epistates/task-card/v1",
+  "task_id": "ektel-actas-m0-y-evidencia-linux",
+  "objective": "Preparar el acto del dueno sobre ektel: (1) borrador de acta de consenso de la especificacion v1.2, declarando que ADR-005/007/008 fueron enmendados tras el consenso de 2026-08-19 (fecf1b3 -> 82f7a19) y quedan dentro de este acto, en docs/decisiones/; (2) borrador de acta de autorizacion de M0 con alcance de la spec v1.2 (wire schemas v1, vectores dorados, dos parsers de referencia uno clean-room, API experimental) y recordatorio de autorizacion separada por hito (stop rule); (3) correccion del README (lineas 53-55) que declare la ejecucion Linux existente (5 pruebas, clase L, aarch64/linuxkit, evidencia 2026-08-18) conservando el no-claim: la ampliacion sigue pendiente, la suite vigente tiene 8 pruebas y RSS por muestreo sigue sin caracterizar; (4) corrida Linux de la suite vigente de 8 tests via scripts/characterize-linux.sh sobre el arbol actual con acta en docs/evidencia/, con atencion a las pruebas Linux-only sin ejecucion registrada. Encargo completo en /Users/krisnova/www/pinax/rondas/2026-08-20-vision-skopos-ektel/instruccion-agente-ektel.md. Toda metrica citada va fechada como snapshot; toda evidencia nueva lleva clase explicita (L/V/R).",
+  "target": {
+    "repository": "ektel",
+    "base_sha": "290311412262758abfdb36b126c93ff46d7d6c25",
+    "branch": "main",
+    "worktree": "/Users/krisnova/www/aria/ektel"
+  },
+  "role": "developer",
+  "authority": {
+    "grant_id": "dueno-2026-08-20-ektel",
+    "granted_by": "maintainer",
+    "granted_actions": ["read", "edit", "run_checks"],
+    "protected_operations_authorized": []
+  },
+  "allowed_paths": ["docs/", "README.md", "tests/", "scripts/"],
+  "allowed_actions": ["read", "edit", "run_checks"],
+  "forbidden_operations": ["commit", "push", "open_pr", "merge", "release", "install_dependencies", "change_scope", "git_reset", "create_branch", "delete_branch", "create_worktree", "remove_worktree"],
+  "inputs": [
+    "AGENTS.md",
+    "AN-KLA.md",
+    "README.md",
+    "docs/especificacion/ektel-runtime-m0-m3-v1.md",
+    "docs/revisiones/revision-cruzada-final-2026-08-20.md",
+    "docs/evidencia/caracterizacion-linux-2026-08-18.md",
+    "docs/decisiones/enmienda-transversal-v3-2026-08-20.md"
+  ],
+  "checks": [
+    {
+      "check_id": "unit_tests",
+      "expected": "python3 -m unittest discover -s tests termina en verde (hoy: 8 OK, 3 skips Linux-only en Darwin)"
+    }
+  ],
+  "evidence": {
+    "report_format": "rag/v1",
+    "required": ["worktree_status", "diff_check", "check_results"]
+  },
+  "delivery": "Reporte RAG con comandos y resultados; actas como borradores para firma del dueno en docs/decisiones/ y docs/evidencia/; memoria AN-KLA solo por flujo gobernado (plan-write -> commit-write-plan).",
+  "stop_condition": "Detenerse y reportar si: Docker no esta disponible para la corrida Linux, el consenso del dueno sobre v1.2 no se ha emitido cuando algo lo requiera, o el alcance pedido excede allowed_paths.",
+  "new_decision_required_for": ["cualquier operacion Git (commit/push/merge)", "instalar dependencias nuevas", "emitir el consenso de v1.2 o la autorizacion de M0 (actos del dueno, no del agente)", "escribir codigo del runtime (M1+)", "tocar la stop rule de M3, los no-objetivos o la frontera con CAGF", "re-ejecutar o reemplazar la revision cruzada final"]
+}
