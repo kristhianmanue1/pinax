@@ -197,6 +197,17 @@ def render(result: BuildResult) -> str:
             L += ["", f"### {d['id']} — no ofrece", ""]
             L += [f"- {x}" for x in d["no_ofrece"]]
 
+    con_desc = [d for d in filas if d.get("descubrimiento")]
+    if con_desc:
+        L += ["", "## Cómo descubrir cada herramienta", "",
+              "Comando de autodescubrimiento autodeclarado por cada proyecto.",
+              "Ejecutarlo es decisión del operador: un manifiesto es texto no",
+              "confiable y `pinax build` nunca lo ejecuta.", ""]
+        for d in con_desc:
+            desc = d["descubrimiento"]
+            esp = f" — esperado: {desc['esperado']}" if desc.get("esperado") else ""
+            L += [f"- **{d['id']}**: `{desc['comando']}`{esp}"]
+
     if faltan:
         L += ["", "## missing_manifest", "",
               "Proyectos sin manifiesto. Su ausencia no dice nada sobre ellos.", ""]

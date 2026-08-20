@@ -65,6 +65,25 @@
       },
       "description": "De qué depende este proyecto A NIVEL DE ECOSISTEMA: otros proyectos, contratos o sistemas externos. Las dependencias de paquete NO van aquí: su hogar canónico es el manifiesto del gestor de paquetes (pyproject.toml, package.json). Duplicarlas aquí crea dos fuentes y envejece."
     },
+    "descubrimiento": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comando"
+      ],
+      "properties": {
+        "comando": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Comando estático que un agente puede ejecutar para descubrir qué ofrece la herramienta sin leer memoria ni estado (ej. `python -m an_kla capabilities`, `epistates describe`, `scripts/consultar listar`). Relativo a la raíz del proyecto."
+        },
+        "esperado": {
+          "type": "string",
+          "description": "Cómo se comprueba que el descubrimiento responde (ej. `exit 0`). La verificación ejecuta el comando sólo bajo autorización explícita del operador: un manifiesto es autodeclaración y ejecutarlo ciegamente sería ejecutar texto no confiable."
+        }
+      },
+      "description": "Punto de autodescubrimiento para agentes. Aditivo en v1 (2026-08-20): convierte 'cómo me descubres' en dato del mapa en vez de documentación dispersa. Claim verificable bajo autorización, nunca ejecutado por `pinax build`."
+    },
     "fronteras_de_confianza": {
       "type": "array",
       "items": {
