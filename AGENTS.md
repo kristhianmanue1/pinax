@@ -96,8 +96,8 @@ se relacionan con cuáles*, no *qué librerías instala cada uno*.
 
 ## Memoria y política de agentes
 
-Este proyecto usa memoria local AN-KLA (instalada 2026-08-20, tag
-`v0.1.0-beta.15`, `.an-kla/` gitignored). Antes de trabajo material:
+Este proyecto usa memoria local AN-KLA (instalada 2026-08-20; versión local
+observada `0.1.0b16` al 2026-08-21, `.an-kla/` gitignored). Antes de trabajo material:
 `docs/guia-an-kla-pinax.md` — su protocolo de arranque (`status → verify →
 checkpoint show → resume`) es **condición de operación**: si `verify`
 falla, no se opera y se reporta. Cómo se despachan y aceptan encargos:

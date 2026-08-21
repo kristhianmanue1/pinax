@@ -17,7 +17,7 @@ pieza, para mí y para los demás agentes de proyectos?
 | Política de agentes local (`docs/politica-agentes-pinax.md`) | **praxis-dev** — gobernanza ejecutable: autoridad, plan/apply, evidencia, perfiles de aseguramiento | Copia local del patrón de escrubery; cuando praxis-dev madure, las políticas por repo se generan/verifican contra el estándar, no se improvisan | `0.1.0-draft.1` — sin adoptantes; pinax sería el primero |
 | Encargos obligatorios (task-cards) | **epistates** — contrato + preflight + evidencia rag/v1 | Ya adoptado hoy: 2 task-cards VALID | alpha `0.1.0a1`, validador read-only funcional |
 | Evidencia de rondas (actas firmadas) | **argos** — claims content-addressed, evidencia L0–L5, attestations | Hoy son Markdown firmado "en palabra"; con argos serían claims con fingerprint verificable | `0.2.0rc2`, sin CLI estable |
-| Descubrimiento de herramientas (tabla de REANUDAR) | **Pinax mismo** — el manifiesto puede declarar `descubrimiento: <comando>` y el mapa lo publica como claim **verificable** (ejecutar el comando y comprobar exit 0) | La tabla vive en un doc temporal; debería ser dato del mapa | Pinax: falta campo en schema v1 (aditivo, retrocompatible) |
+| Descubrimiento de herramientas (tabla de REANUDAR) | **Pinax mismo** — el manifiesto puede declarar `descubrimiento.argv` y el mapa lo publica como claim verificable | La tabla vive en un doc temporal; debería ser dato del mapa | Campo aditivo incorporado como argv estructurado; Pinax no lo ejecuta |
 | Método de construcción | **skevi** — F0→F3, ADRs, rondas | Ya adoptado por referencia en skopos | maduro, en uso real |
 | Verdad sobre CLIs/modelos | **escrubery** — fichas con procedencia | Canal instruido para skopos (REQ-10); falta ejercitar | Fase 0 funcional |
 | Protocolo de ronda adversarial | **proteinomenos** — independencia, procedencia, "primero fallos" | Lo apliqué informal hoy; debería ser el protocolo citado, no reinventado | documento de misión, sin tooling |
@@ -39,8 +39,9 @@ Todo eso se declara así en la tabla — no se vende como más de lo que es.
 
 ## Acciones registradas
 
-1. REANUDAR.md muere cuando el mapa (MAPA.md) absorba los estados y el
-   campo `descubrimiento` exista en el manifiesto v1 (cambio aditivo).
+1. `REANUDAR.md` se retira cuando AN-KLA contiene un checkpoint vigente. El
+   mapa no absorbe estado dinámico; `descubrimiento` sólo publica la interfaz
+   estática autodeclarada.
 2. `politica-agentes-pinax.md` es candidata a perfil de praxis-dev cuando
    el draft lo admita; retroalimentación de primer adoptante registrada.
 3. Las actas de rondas futuras deberían emitirse como claims de argos,

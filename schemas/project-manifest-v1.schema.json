@@ -69,20 +69,36 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "comando"
+        "argv"
       ],
       "properties": {
-        "comando": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Comando estático que un agente puede ejecutar para descubrir qué ofrece la herramienta sin leer memoria ni estado (ej. `python -m an_kla capabilities`, `epistates describe`, `scripts/consultar listar`). Relativo a la raíz del proyecto."
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "prefixItems": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[^\\u0000\\r\\n\\u2028\\u2029]+$"
+            }
+          ],
+          "items": {
+            "type": "string",
+            "maxLength": 4096,
+            "pattern": "^[^\\u0000\\r\\n\\u2028\\u2029]*$"
+          },
+          "description": "Argumentos estructurados del punto de autodescubrimiento. Un consumidor futuro debe construir subprocess argv directamente con shell=False. Esto evita interpretación implícita por el runner, pero NO vuelve seguro el argv: el programa declarado puede ser un shell o intérprete. La autorización debe revisar el ejecutable y cada argumento exactos."
         },
-        "esperado": {
-          "type": "string",
-          "description": "Cómo se comprueba que el descubrimiento responde (ej. `exit 0`). La verificación ejecuta el comando sólo bajo autorización explícita del operador: un manifiesto es autodeclaración y ejecutarlo ciegamente sería ejecutar texto no confiable."
+        "expected_exit_code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Código de salida esperado; si se omite, el consumidor usa 0. No expresa autorización para ejecutar."
         }
       },
-      "description": "Punto de autodescubrimiento para agentes. Aditivo en v1 (2026-08-20): convierte 'cómo me descubres' en dato del mapa en vez de documentación dispersa. Claim verificable bajo autorización, nunca ejecutado por `pinax build`."
+      "description": "Punto de autodescubrimiento para agentes. Es una autodeclaración no confiable: `pinax build` sólo la representa y nunca la ejecuta. Cualquier ejecución futura exige autorización sobre el argv exacto, shell=False, entorno mínimo, cwd controlado y límites de proceso; shell=False no impide que argv[0] sea un shell o intérprete."
     },
     "fronteras_de_confianza": {
       "type": "array",

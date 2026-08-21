@@ -8,6 +8,11 @@ propia y retracciones, como exige F5.
 **Logs:** `codex-raw.log`, `claude-frentes-1-2.log`, `claude-frente-4.log`,
 `claude-frente-5.log` (este directorio).
 
+> Nota de publicación 2026-08-21: `codex-raw.log` conserva el contenido de la
+> captura, pero se normalizó mecánicamente retirando whitespace final para que
+> el gate del repositorio sea reproducible. Las capturas vacías de intentos
+> fallidos se retiraron; no constituían evidencia.
+
 ## Veredictos
 
 - **Codex: NO-GO** — 3 bloqueantes, 1 menor, 2 notas. Retracciones: 2.

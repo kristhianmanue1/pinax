@@ -452,7 +452,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-OYTDm5DN' (errno=Operation
 git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
 git: error: couldn't create cache file '/tmp/xcrun_db-Y5LE3pzz' (errno=Operation not permitted)
    102	## 5. Wire format (ADR-002)
-   103	
+   103
    104	1. JSON UTF-8 estricto: se rechazan NaN/Infinity, claves duplicadas,
    105	   campos desconocidos (salvo extensión versionada explícita), tipos
    106	   coercionados y documentos que excedan los límites de tamaño declarados
@@ -479,9 +479,9 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Y5LE3pzz' (errno=Operation
    127	   diagnóstico esperado) consumibles por todo parser de referencia.
    128	5. Cada wire type lleva `schema_version`; el núcleo rechaza versiones
    129	   mayores desconocidas.
-   130	
+   130
    131	## 6. Identidad y capacidad (ADR-003, formaliza D7a)
-   132	
+   132
    133	1. `ExecutionIdentity v1` incluye el campo firmado
    134	   `artifact_identity_profile` con un único valor válido en v1:
    135	   `route_mutable_unverified`. Forma parte del `identity_digest` y del
@@ -529,10 +529,10 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Y5LE3pzz' (errno=Operation
    177	   `action_id || identity_digest`). Es local al proceso supervisor, opaco,
    178	   no serializable, confidencial (redactado en logs y eventos) e inválido
    179	   tras reiniciar el supervisor; no es una capacidad bearer persistible.
-   180	
+   180
    181	El descriptor no contiene secretos (R2): los eventos registran el entorno
    182	sólo por digest o forma redactada (§10).
-   183	
+   183
    184	## 7. Vigencia, reloj y nonce (ADR-004, formaliza D2/D3)
 git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
 git: error: couldn't create cache file '/tmp/xcrun_db-Gxsj65rQ' (errno=Operation not permitted)
@@ -543,7 +543,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-yziJcVc6' (errno=Operation
 git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
 git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation not permitted)
      1	# Claims y no-claims de ektel M0–M3
-     2	
+     2
      3	**Estado:** **consensuada por el dueño el 2026-08-19**, tras aplicar el
      4	veredicto externo
      5	(`docs/revisiones/revision-externa-claude-tabla-claims-2026-08-19.txt`), y
@@ -558,7 +558,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation
     14	propuesta histórica M0–M3, recogido en la especificación v1.2 §19 punto 4
     15	(precisión editorial por acta
     16	`docs/decisiones/enmienda-adopcion-19-6-y-cita-tabla-2026-08-20.md`).
-    17	
+    17
     18	Esta tabla es el lenguaje público permitido sobre ektel. Todo documento,
     19	README o integración que afirme algo fuera de "Claims" o niegue algo de
     20	"No-claims" contradice la gobernanza del proyecto. Las clases de garantía
@@ -567,9 +567,9 @@ git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation
     23	propuesta histórica
     24	(`docs/propuestas/propuesta-runtime-minimo-m0-m3-2026-08-17.md`) o la
     25	especificación v1.2, según el contexto de cada fila.
-    26	
+    26
     27	## Claims (lo que M0–M3 sí afirmará, una vez implementado y probado)
-    28	
+    28
     29	| # | Claim | Clase / base |
     30	|---|---|---|
     31	| C1 | Toda acción mal formada, no autorizada o con capacidad inválida, expirada o reutilizada se rechaza antes de iniciar cualquier proceso (fail-closed en admisión). | Diseño: §6.2, ADR-003/004 |
@@ -580,21 +580,21 @@ git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation
     36	| C6 | Con `policy_mode=required`, ninguna acción inicia sin `Allow` del PolicyPort configurado. | ADR-008 |
     37	| C7 | Con auditoría obligatoria, el inicio falla cerrado si el evento previo no logra recibo `flush_protocol_completed` (antes `durable`; renombrado por D1). El protocolo es fsync de archivo y directorio; en Darwin (macOS) `fsync()` no vacía la caché del disco y se requiere `fcntl(F_FULLFSYNC)`. `flush_protocol_completed` significa "protocolo de plataforma completado bajo supuestos declarados": el orden del protocolo y la recuperación tras crash del escritor **sí son testeables** (nivel 1: SIGKILL del escritor; nivel 2: dm-flakey en Linux — ambos se validan en M3); la supervivencia a un **corte físico real** no es testeable sin hardware (nivel 3, supuesto declarado; ver N5). | ADR-007 |
     38	| C10 | Los contratos v1 son versionados, estrictos y verificables contra vectores dorados. | ADR-002 |
-    39	
+    39
     40	*(C8 queda **retirado** por la segunda revisión externa 2026-08-20 (C3):
     41	la formulación "enlaces rotos respecto de un head confiable" no tenía
     42	interfaz implementable en v1 — no existe puerto `TrustedHeadStore` ni
     43	`verify_chain`. La cadena de eventos aporta diagnóstico de consistencia
     44	interna y eso queda declarado en N7; la verificación contra head confiable
     45	externo es propuesta v2. El identificador C8 no se reutiliza.)*
-    46	
+    46
     47	*(La contabilidad de CPU se retiró de Claims por la revisión externa
     48	2026-08-19, F7: es una magnitud que el producto no gobierna —clase
     49	`observed` en el mejor caso— y v1 excluye `budget_exceeded`. Permanece
     50	registrada como evidencia E1/E2 y en la tabla de garantías por plataforma,
     51	no como claim de producto. El identificador C9 queda retirado, no
     52	reutilizado.)*
-    53	
+    53
     54	*(Estado de evidencia — taxonomía §2.1 de la consolidación: hoy todos los
     55	claims son **P** (propuesta de diseño). Ninguno es V/L hasta que la suite
     56	del hito correspondiente lo ejecute y conserve la prueba: C1–C4 y C10 con
@@ -603,9 +603,9 @@ git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation
     59	ejerce la transición prometida y comprueba el rechazo, recibo o estado
     60	contrario; un claim que sobrevive su suite pasa a V y esta nota se
     61	actualiza por claim, no en bloque.)*
-    62	
+    62
     63	## No-claims (lo que ektel NO afirma)
-    64	
+    64
     65	| # | No-claim | Origen |
     66	|---|---|---|
     67	| N1 | Ektel **no garantiza la identidad del binario ejecutado**: con `route_mutable_unverified`, el contenido de `command_absolute` puede cambiar entre admisión e inicio (TOCTOU reconocido, no mitigado en v1). Si este supuesto cae, la identidad del descriptor sigue autenticada (C2 en parte), pero la vinculación al artefacto realmente ejecutado queda anulada. | D7a, ADR-003 |
@@ -622,13 +622,13 @@ git: error: couldn't create cache file '/tmp/xcrun_db-rNGGVWEq' (errno=Operation
     78	| N12 | Ninguna afirmación de portabilidad x86_64 hasta caracterización en hardware o VM real; la evidencia actual cubre Linux aarch64 (linuxkit) y Darwin arm64 (macOS 26.5.2). | ADR-006 |
     79	| N13 | El replay store y la admisión asumen reloj de pared disciplinado (NTP) y tolerancia declarada; un administrador del host está fuera del modelo de amenaza. | ADR-004 |
     80	| N14 | Ektel no protege su almacén ni su clave contra el proceso supervisado más allá de la separación de escritura por diseño; la protección de rutas y permisos es del despliegue. Si la **clave** se filtra, se anulan **en silencio** C1 y C2: un atacante fabrica capacidades válidas e inicios indistinguibles. C7 **no** cae por la clave — exige además comprometer o evadir el AuditSink (corrección de la segunda revisión externa, 2026-08-20). Si el **almacén** es reescrito por completo, la cadena deja de detectarlo (los recibos v1 no llevan MAC: no se "fabrican", se reescriben). | ADR-001 A2, ADR-003 A1, ADR-007 |
-    81	
+    81
     82	*(N15 queda **reservado sin uso**: la numeración de no-claims no se compacta, igual que C9 y C8 en Claims. Ningún no-claim fue retirado en silencio.)*
-    83	
+    83
     84	| N16 | Ektel afirma la **presencia** de un `Allow` del PolicyPort, no la corrección de la política externa. El núcleo **sí** valida el sobre de respuesta (forma, `decision_id`, vigencia `valid_until` contra reloj de pared con tolerancia declarada, recepción dentro del timeout) y convierte un `Allow` expirado o tardío en rechazo cuando el puerto es requerido; lo que **no** valida es que el adaptador decida bien ni que su política sea justa — eso es del adaptador, bajo su propio contrato (pareja de C6). | ADR-008 |
-    85	
+    85
     86	## Regla de uso
-    87	
+    87
     88	Afirmar un no-claim como claim, o un claim antes de que su criterio de
     89	salida esté probado, es un defecto de documentación que se corrige antes de
     90	cualquier publicación. Esta tabla se versiona con los contratos: un cambio
@@ -815,9 +815,9 @@ git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEM
 git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation not permitted)
      1	#!/usr/bin/env python3
      2	"""Parser de referencia A para los wire types ektel v1 (M0).
-     3	
+     3
      4	Implementa el perfil byte-exacto de la spec v1.2 (§5, §6, §8.3):
-     5	
+     5
      6	- JSON estricto (§5.1): sin NaN/Infinity, sin claves duplicadas, sin campos
      7	  desconocidos, sin coerción de tipos (bool no es int), sin versiones mayores.
      8	- Sobres firmados (§5.2): estructura fija {protected_header_b64, payload_b64,
@@ -827,15 +827,15 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     12	- PoP (§6.4): HMAC-SHA256(key, "ektel/pop/v1" || 0x00 || len32be(nonce) ||
     13	  nonce || digest_bytes).
     14	- identity_digest = SHA256(ASCII(phb64) || "." || ASCII(plb64)) en hex.
-    15	
+    15
     16	Diagnósticos (vocabulario cerrado de parser, M0):
     17	ok, malformed_json, duplicate_key, unknown_field, missing_field,
     18	invalid_type, invalid_value, bad_base64, bad_signature, alg_unsupported,
     19	schema_version_unsupported.
-    20	
+    20
     21	stdlib-only (ADR-006). API EXPERIMENTAL (spec §16): sin compromiso de
     22	estabilidad hasta cerrar M0 con la prueba de implementación independiente.
-    23	
+    23
     24	Uso:
     25	    from ektel_ref_parser import parse_wire
     26	    result = parse_wire(wire_type, raw_bytes, key=test_key)
@@ -844,7 +844,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     29	    result.identity_digest  # sólo en sobres aceptados
     30	"""
     31	from __future__ import annotations
-    32	
+    32
     33	import hashlib
     34	import hmac
     35	import json
@@ -852,44 +852,44 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     37	from base64 import urlsafe_b64decode
     38	from dataclasses import dataclass
     39	from typing import Any
-    40	
+    40
     41	B64U_ALPHABET = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
-    42	
+    42
     43	DOMAINS = {
     44	    "capability": b"ektel/capability/v1\x00",
     45	    "admission-token": b"ektel/admission/v1\x00",
     46	    "termination-token": b"ektel/termination/v1\x00",
     47	}
-    48	
+    48
     49	POP_DOMAIN = b"ektel/pop/v1\x00"
-    50	
+    50
     51	MAX_WIRE_BYTES = 65536
-    52	
-    53	
+    52
+    53
     54	@dataclass
     55	class ParseResult:
     56	    verdict: str
     57	    diagnostic: str
     58	    identity_digest: str | None = None
     59	    value: Any = None
-    60	
-    61	
+    60
+    61
     62	def _reject(diagnostic: str) -> ParseResult:
     63	    return ParseResult("reject", diagnostic)
-    64	
-    65	
+    64
+    65
     66	def _accept(value: Any, identity_digest: str | None = None) -> ParseResult:
     67	    return ParseResult("accept", "ok", identity_digest=identity_digest, value=value)
-    68	
-    69	
+    68
+    69
     70	# ---------------------------------------------------------------------------
     71	# JSON estricto (§5.1)
     72	# ---------------------------------------------------------------------------
-    73	
+    73
     74	def _no_constant(_s: str) -> Any:
     75	    raise ValueError("constant not allowed")
-    76	
-    77	
+    76
+    77
     78	def _strict_loads(raw: bytes) -> tuple[Any, str | None]:
     79	    """Devuelve (objeto, diagnostico_de_rechazo|None)."""
     80	    if len(raw) > MAX_WIRE_BYTES:
@@ -898,7 +898,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     83	        text = raw.decode("utf-8")
     84	    except UnicodeDecodeError:
     85	        return None, "malformed_json"
-    86	
+    86
     87	    def no_dupes(pairs):
     88	        obj = {}
     89	        for k, v in pairs:
@@ -906,7 +906,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     91	                raise _DuplicateKey(k)
     92	            obj[k] = v
     93	        return obj
-    94	
+    94
     95	    try:
     96	        value = json.loads(text, object_pairs_hook=no_dupes, parse_constant=_no_constant)
     97	    except _DuplicateKey:
@@ -914,27 +914,27 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
     99	    except (ValueError, json.JSONDecodeError):
    100	        return None, "malformed_json"
    101	    return value, None
-   102	
-   103	
+   102
+   103
    104	class _DuplicateKey(Exception):
    105	    pass
-   106	
-   107	
+   106
+   107
    108	def _is_int(v: Any) -> bool:
    109	    return isinstance(v, int) and not isinstance(v, bool)
-   110	
-   111	
+   110
+   111
    112	def _is_hex(s: Any, n: int) -> bool:
    113	    return isinstance(s, str) and len(s) == n and all(c in "0123456789abcdef" for c in s)
-   114	
-   115	
+   114
+   115
    116	# ---------------------------------------------------------------------------
    117	# Validación estructural por campos (hand-coded, spec §5.1)
    118	# ---------------------------------------------------------------------------
-   119	
+   119
    120	def _check_object(value: Any, spec: dict[str, tuple[str, Any]], required: set[str]) -> str | None:
    121	    """spec: campo -> ("kind", extra). Devuelve diagnóstico o None.
-   122	
+   122
    123	    kinds: str, int, bool, enum, hex(n), b64u, object(sub), array_str,
    124	    array_obj(sub), map_str, map_int, any
    125	    """
@@ -953,8 +953,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    138	        if diag:
    139	            return diag
    140	    return None
-   141	
-   142	
+   141
+   142
    143	def _check_kind(v: Any, kind: str, extra: Any) -> str | None:
    144	    if kind == "str":
    145	        if not isinstance(v, str):
@@ -1000,24 +1000,24 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    185	    elif kind == "any":
    186	        return None
    187	    return None
-   188	
-   189	
+   188
+   189
    190	# ---------------------------------------------------------------------------
    191	# Esquemas de campos (fiel a contracts/schemas/v1)
    192	# ---------------------------------------------------------------------------
-   193	
+   193
    194	OUTPUT_LIMITS = ({"max_stdout_bytes": ("int", (0, 67108864)), "max_stderr_bytes": ("int", (0, 67108864))},
    195	                 {"max_stdout_bytes", "max_stderr_bytes"})
-   196	
+   196
    197	GUARANTEE_ENTRY = ({
    198	    "magnitude": ("str", 0), "class": ("enum", ["enforced", "reactive", "observed", "unsupported"]),
    199	    "platform": ("str", 0), "mechanism": ("str", 0),
    200	    "assumptions": ("array_str", 64), "known_escapes": ("array_str", 64),
    201	    "failure_mode": ("str", 0), "evidence_ref": ("str", 0),
    202	}, {"magnitude", "class", "platform", "mechanism", "assumptions", "known_escapes", "failure_mode", "evidence_ref"})
-   203	
+   203
    204	GUARANTEES_ENUM = ["runtime_supervision", "output_bounds", "audit_trail"]
-   205	
+   205
    206	ACTION_BINDING = ({
    207	    "action_id": ("str", 128), "command_absolute": ("str", 0), "args": ("array_str", 256),
    208	    "cwd": ("str", 0), "env_allowlist_values": ("map_str", 64),
@@ -1026,7 +1026,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    211	    "requested_guarantees": ("array_str", 16),
    212	}, {"action_id", "command_absolute", "args", "cwd", "env_allowlist_values",
    213	    "stdin_policy_digest", "deadline_ms", "output_limits", "requested_guarantees"})
-   214	
+   214
    215	CAPABILITY_PAYLOAD = ({
    216	    "schema_version": ("enum", [1]), "issuer_id": ("str", 128), "key_id": ("hex", 16),
    217	    "nonce": ("hex", 32), "nbf": ("int", None), "exp": ("int", None),
@@ -1034,32 +1034,32 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    219	    "action_binding": ("object", ACTION_BINDING),
    220	}, {"schema_version", "issuer_id", "key_id", "nonce", "nbf", "exp",
    221	    "artifact_identity_profile", "action_binding"})
-   222	
+   222
    223	ADMISSION_TOKEN_PAYLOAD = ({
    224	    "schema_version": ("enum", [1]), "identity_digest": ("hex", 64),
    225	    "action_id": ("str", 128), "exp": ("int", None), "issuer_id": ("str", 128),
    226	}, {"schema_version", "identity_digest", "action_id", "exp", "issuer_id"})
-   227	
+   227
    228	TERMINATION_TOKEN_PAYLOAD = ({
    229	    "schema_version": ("enum", [1]), "action_id": ("str", 128), "identity_digest": ("hex", 64),
    230	}, {"schema_version", "action_id", "identity_digest"})
-   231	
+   231
    232	PAYLOAD_SPECS = {
    233	    "capability": CAPABILITY_PAYLOAD,
    234	    "admission-token": ADMISSION_TOKEN_PAYLOAD,
    235	    "termination-token": TERMINATION_TOKEN_PAYLOAD,
    236	}
-   237	
+   237
    238	INVOCATION_PROOF = ({
    239	    "schema_version": ("enum", [1]), "nonce": ("hex", 32),
    240	    "payload_digest": ("hex", 64), "mac": ("hex", 64),
    241	}, {"schema_version", "nonce", "payload_digest", "mac"})
-   242	
+   242
    243	STDIN_POLICY = ({
    244	    "kind": ("enum", ["empty", "inline_b64"]),
    245	    "data_b64": ("b64u", 0), "sha256": ("hex", 64),
    246	}, {"kind"})
-   247	
+   247
    248	ACTION_REQUEST = ({
    249	    "schema_version": ("enum", [1]), "action_id": ("str", 128),
    250	    "command_absolute": ("str", 0), "args": ("array_str", 256), "cwd": ("str", 0),
@@ -1073,7 +1073,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    258	    "env_allowlist_values", "stdin_policy", "deadline_ms", "capability_envelope",
    259	    "invocation_proof", "nonce", "repair_policy", "output_limits",
    260	    "requested_guarantees", "metadata_opaque"})
-   261	
+   261
    262	ADMISSION_OUTCOME = ({
    263	    "schema_version": ("enum", [1]), "outcome": ("enum", ["admitted", "admission_rejected"]),
    264	    "admitted_action": ("str", 0), "identity_digest": ("hex", 64),
@@ -1083,19 +1083,19 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    268	                             "policy_unavailable", "audit_unavailable", "guarantee_unsupported"]),
    269	    "safe_detail": ("str", 512), "retryable": ("bool", None), "evidence_receipt": ("str", 0),
    270	}, {"schema_version", "outcome"})
-   271	
+   271
    272	START_OUTCOME = ({
    273	    "schema_version": ("enum", [1]), "outcome": ("enum", ["started", "start_failed"]),
    274	    "handle_ref": ("hex", 16),
    275	    "reason_code": ("enum", ["start_failed", "start_failed_indeterminate", "capability_rejected"]),
    276	    "safe_detail": ("str", 512),
    277	}, {"schema_version", "outcome"})
-   278	
+   278
    279	TERMINATION_OUTCOME = ({
    280	    "schema_version": ("enum", [1]), "outcome": ("enum", ["termination_accepted", "termination_rejected"]),
    281	    "receipt": ("str", 0), "reason_code": ("enum", ["capability_rejected"]), "safe_detail": ("str", 512),
    282	}, {"schema_version", "outcome"})
-   283	
+   283
    284	EXECUTION_RESULT = ({
    285	    "schema_version": ("enum", [1]), "action_id": ("str", 128), "identity_digest": ("hex", 64),
    286	    "state": ("enum", ["executed", "deadline_exceeded", "terminated", "supervision_failed"]),
@@ -1111,7 +1111,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    296	    "discarded_bytes": ("int", None), "last_event_receipt": ("str", 0),
    297	}, {"schema_version", "action_id", "identity_digest", "state",
    298	    "artifact_identity_profile", "guarantees_applied"})
-   299	
+   299
    300	DOCUMENT_SPECS = {
    301	    "action-request": ACTION_REQUEST,
    302	    "admission-outcome": ADMISSION_OUTCOME,
@@ -1120,37 +1120,37 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    305	    "execution-result": EXECUTION_RESULT,
    306	    "invocation-proof": INVOCATION_PROOF,
    307	}
-   308	
-   309	
+   308
+   309
    310	# ---------------------------------------------------------------------------
    311	# Primitivas criptográficas (perfil byte-exacto v1, C2)
    312	# ---------------------------------------------------------------------------
-   313	
+   313
    314	def _b64u_decode(s: str) -> bytes:
    315	    if any(c not in B64U_ALPHABET for c in s):
    316	        raise ValueError("bad_base64")
    317	    pad = (-len(s)) % 4
    318	    return urlsafe_b64decode(s + "=" * pad)
-   319	
-   320	
+   319
+   320
    321	def _mac_envelope(key: bytes, typ: str, phb64: str, plb64: str) -> bytes:
    322	    msg = DOMAINS[typ] + phb64.encode("ascii") + b"." + plb64.encode("ascii")
    323	    return hmac.new(key, msg, hashlib.sha256).digest()
-   324	
-   325	
+   324
+   325
    326	def identity_digest(phb64: str, plb64: str) -> str:
    327	    return hashlib.sha256((phb64 + "." + plb64).encode("ascii")).hexdigest()
-   328	
-   329	
+   328
+   329
    330	# ---------------------------------------------------------------------------
    331	# Parsers por wire type
    332	# ---------------------------------------------------------------------------
-   333	
+   333
    334	ENVELOPE_SPEC = ({
    335	    "protected_header_b64": ("b64u", 0), "payload_b64": ("b64u", 0), "signature": ("b64u", 0),
    336	}, {"protected_header_b64", "payload_b64", "signature"})
-   337	
-   338	
+   337
+   338
    339	def parse_envelope(typ: str, raw: bytes, key: bytes) -> ParseResult:
    340	    value, diag = _strict_loads(raw)
    341	    if diag:
@@ -1202,8 +1202,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    387	    if diag:
    388	        return _reject(diag)
    389	    return _accept(payload, identity_digest=identity_digest(phb64, plb64))
-   390	
-   391	
+   390
+   391
    392	def parse_invocation_proof(raw: bytes, key: bytes) -> ParseResult:
    393	    value, diag = _strict_loads(raw)
    394	    if diag:
@@ -1219,8 +1219,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    404	    if not hmac.compare_digest(mac, expected):
    405	        return _reject("bad_signature")
    406	    return _accept(value)
-   407	
-   408	
+   407
+   408
    409	def parse_document(wire_type: str, raw: bytes) -> ParseResult:
    410	    value, diag = _strict_loads(raw)
    411	    if diag:
@@ -1234,8 +1234,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    419	    if diag:
    420	        return _reject(diag)
    421	    return _accept(value)
-   422	
-   423	
+   422
+   423
    424	def parse_wire(wire_type: str, raw: bytes, key: bytes) -> ParseResult:
    425	    if wire_type in ENVELOPE_TYPES:
    426	        return parse_envelope(ENVELOPE_TYPES[wire_type], raw, key)
@@ -1244,21 +1244,21 @@ git: error: couldn't create cache file '/tmp/xcrun_db-SeQ5OqOr' (errno=Operation
    429	    if wire_type in DOCUMENT_SPECS:
    430	        return parse_document(wire_type, raw)
    431	    raise ValueError(f"wire type desconocido: {wire_type}")
-   432	
-   433	
+   432
+   433
    434	ENVELOPE_TYPES = {
    435	    "capability-envelope": "capability",
    436	    "admission-token": "admission-token",
    437	    "termination-token": "termination-token",
    438	}
-   439	
+   439
    440	WIRE_TYPES = sorted(list(ENVELOPE_TYPES) + ["invocation-proof"] + list(DOCUMENT_SPECS))
-   441	
-   442	
+   441
+   442
    443	if __name__ == "__main__":
    444	    import sys
    445	    from base64 import b64decode
-   446	
+   446
    447	    wire_type, vector_file = sys.argv[1], sys.argv[2]
    448	    doc = json.loads(open(vector_file, encoding="utf-8").read())
    449	    test_key = bytes.fromhex(doc.get("test_key_hex", ""))
@@ -1272,7 +1272,7 @@ git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEM
 git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation not permitted)
      1	#!/usr/bin/env python3
      2	"""Parser de referencia B — CLEAN-ROOM (M0, spec v1.2 §15/M0 enmienda R5).
-     3	
+     3
      4	Protocolo clean-room declarado: este parser se escribió a partir de
      5	- la especificación `docs/especificacion/ektel-runtime-m0-m3-v1.md` (§5, §6,
      6	  §8.3),
@@ -1282,7 +1282,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
     10	A (validación hand-coded), este interprete es table-driven: carga los schemas
     11	JSON en runtime y aplica el subconjunto de JSON Schema que usan (const, enum,
     12	pattern, type+minimum/maximum, required, additionalProperties, $ref local).
-    13	
+    13
     14	Reglas normativas implementadas (texto de la spec, no del parser A):
     15	- §5.1 JSON estricto: NaN/Infinity fuera, claves duplicadas fuera, campos
     16	  desconocidos fuera, sin coerción (bool ≠ int), límite de tamaño.
@@ -1293,16 +1293,16 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
     21	- §6.4 PoP: HMAC sobre len32be(nonce)||nonce||digest_bytes con dominio
     22	  ektel/pop/v1.
     23	- §6.5 identity_digest = SHA256(phb64||"."||plb64) hex.
-    24	
+    24
     25	Vocabulario de diagnósticos (cerrado, común M0): ok, malformed_json,
     26	duplicate_key, unknown_field, missing_field, invalid_type, invalid_value,
     27	size_exceeded, bad_base64, bad_signature, alg_unsupported,
     28	schema_version_unsupported.
-    29	
+    29
     30	stdlib-only (ADR-006). API EXPERIMENTAL (spec §16).
     31	"""
     32	from __future__ import annotations
-    33	
+    33
     34	import hashlib
     35	import hmac
     36	import json
@@ -1311,10 +1311,10 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
     39	from base64 import urlsafe_b64decode
     40	from dataclasses import dataclass
     41	from pathlib import Path
-    42	
+    42
     43	SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas" / "v1"
     44	SIZE_LIMIT = 65536
-    45	
+    45
     46	# wire_type -> (schema file, dominio HMAC | None, es_sobre)
     47	ENVELOPE_DOMAINS = {
     48	    "capability-envelope": "capability",
@@ -1339,35 +1339,35 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
     67	    "termination-outcome": "termination-outcome.schema.json",
     68	    "execution-result": "execution-result.schema.json",
     69	}
-    70	
+    70
     71	WIRE_TYPES = sorted(list(ENVELOPE_DOMAINS) + list(DOCUMENT_SCHEMA_FILES))
-    72	
+    72
     73	B64U_RE = re.compile(r"^[A-Za-z0-9_-]*$")
     74	HEX_RE = re.compile(r"^[0-9a-f]+$")
-    75	
-    76	
+    75
+    76
     77	@dataclass
     78	class ParseResult:
     79	    verdict: str
     80	    diagnostic: str
     81	    identity_digest: str | None = None
     82	    value: object = None
-    83	
-    84	
+    83
+    84
     85	def reject(diag: str) -> ParseResult:
     86	    return ParseResult("reject", diag)
-    87	
-    88	
+    87
+    88
     89	def accept(value, digest=None) -> ParseResult:
     90	    return ParseResult("accept", "ok", identity_digest=digest, value=value)
-    91	
-    92	
+    91
+    92
     93	# -- JSON estricto -----------------------------------------------------------
-    94	
+    94
     95	class DupKey(Exception):
     96	    pass
-    97	
-    98	
+    97
+    98
     99	def strict_json(raw: bytes):
    100	    if len(raw) > SIZE_LIMIT:
    101	        return None, "size_exceeded"
@@ -1375,7 +1375,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    103	        text = raw.decode("utf-8")
    104	    except UnicodeDecodeError:
    105	        return None, "malformed_json"
-   106	
+   106
    107	    def hook(pairs):
    108	        seen = {}
    109	        for k, v in pairs:
@@ -1383,7 +1383,7 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    111	                raise DupKey(k)
    112	            seen[k] = v
    113	        return seen
-   114	
+   114
    115	    try:
    116	        return json.loads(text, object_pairs_hook=hook,
    117	                          parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c))), None
@@ -1391,14 +1391,14 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    119	        return None, "duplicate_key"
    120	    except ValueError:
    121	        return None, "malformed_json"
-   122	
-   123	
+   122
+   123
    124	# -- Intérprete del subconjunto de JSON Schema --------------------------------
-   125	
+   125
    126	def load_schema(name: str) -> dict:
    127	    return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
-   128	
-   129	
+   128
+   129
    130	def check(value, schema: dict) -> str | None:
    131	    """Valida value contra el subconjunto usado en contracts/schemas/v1."""
    132	    if "$ref" in schema:
@@ -1470,8 +1470,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    198	    if t == "boolean":
    199	        return None if isinstance(value, bool) else "invalid_type"
    200	    return None
-   201	
-   202	
+   201
+   202
    203	def schema_version_diag(value) -> str | None:
    204	    """schema_version mayor desconocida → diagnóstico propio (§5.5)."""
    205	    if isinstance(value, dict):
@@ -1479,25 +1479,25 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    207	        if isinstance(sv, int) and not isinstance(sv, bool) and sv != 1:
    208	            return "schema_version_unsupported"
    209	    return None
-   210	
-   211	
+   210
+   211
    212	# -- Criptografía byte-exacta (§5.2, §6.4, §6.5) ------------------------------
-   213	
+   213
    214	def b64u_decode_strict(s: str) -> bytes:
    215	    if not B64U_RE.match(s):
    216	        raise ValueError("bad_base64")
    217	    if len(s) % 4 == 1:
    218	        raise ValueError("bad_base64")
    219	    return urlsafe_b64decode(s + "=" * ((-len(s)) % 4))
-   220	
-   221	
+   220
+   221
    222	def envelope_mac(key: bytes, domain: str, phb64: str, plb64: str) -> bytes:
    223	    msg = b"ektel/" + domain.encode("ascii") + b"/v1\x00" + phb64.encode() + b"." + plb64.encode()
    224	    return hmac.new(key, msg, hashlib.sha256).digest()
-   225	
-   226	
+   225
+   226
    227	# -- Parsers por tipo ---------------------------------------------------------
-   228	
+   228
    229	def parse_signed_envelope(wire_type: str, raw: bytes, key: bytes) -> ParseResult:
    230	    env, diag = strict_json(raw)
    231	    if diag:
@@ -1552,8 +1552,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    280	        return reject(diag)
    281	    digest = hashlib.sha256((phb64 + "." + plb64).encode("ascii")).hexdigest()
    282	    return accept(payload, digest)
-   283	
-   284	
+   283
+   284
    285	def parse_proof(raw: bytes, key: bytes) -> ParseResult:
    286	    value, diag = strict_json(raw)
    287	    if diag:
@@ -1571,8 +1571,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    299	    if not hmac.compare_digest(mac, hmac.new(key, msg, hashlib.sha256).digest()):
    300	        return reject("bad_signature")
    301	    return accept(value)
-   302	
-   303	
+   302
+   303
    304	def parse_strict_document(wire_type: str, raw: bytes) -> ParseResult:
    305	    value, diag = strict_json(raw)
    306	    if diag:
@@ -1584,8 +1584,8 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    312	    if diag:
    313	        return reject(diag)
    314	    return accept(value)
-   315	
-   316	
+   315
+   316
    317	def parse_wire(wire_type: str, raw: bytes, key: bytes) -> ParseResult:
    318	    if wire_type in ENVELOPE_DOMAINS:
    319	        return parse_signed_envelope(wire_type, raw, key)
@@ -1594,12 +1594,12 @@ git: error: couldn't create cache file '/tmp/xcrun_db-Ky0N5pgr' (errno=Operation
    322	    if wire_type in DOCUMENT_SCHEMA_FILES:
    323	        return parse_strict_document(wire_type, raw)
    324	    raise ValueError(f"wire type desconocido: {wire_type}")
-   325	
-   326	
+   325
+   326
    327	if __name__ == "__main__":
    328	    import sys
    329	    from base64 import b64decode
-   330	
+   330
    331	    wire_type, vector_file, key_hex = sys.argv[1], sys.argv[2], sys.argv[3]
    332	    doc = json.loads(open(vector_file, encoding="utf-8").read())
    333	    r = parse_wire(wire_type, b64decode(doc["bytes"]), bytes.fromhex(key_hex))
@@ -1656,9 +1656,9 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
  exited 1 in 5065ms:
      1	#!/usr/bin/env python3
      2	"""Parser de referencia A para los wire types ektel v1 (M0).
-     3	
+     3
      4	Implementa el perfil byte-exacto de la spec v1.2 (§5, §6, §8.3):
-     5	
+     5
      6	- JSON estricto (§5.1): sin NaN/Infinity, sin claves duplicadas, sin campos
      7	  desconocidos, sin coerción de tipos (bool no es int), sin versiones mayores.
      8	- Sobres firmados (§5.2): estructura fija {protected_header_b64, payload_b64,
@@ -1668,15 +1668,15 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     12	- PoP (§6.4): HMAC-SHA256(key, "ektel/pop/v1" || 0x00 || len32be(nonce) ||
     13	  nonce || digest_bytes).
     14	- identity_digest = SHA256(ASCII(phb64) || "." || ASCII(plb64)) en hex.
-    15	
+    15
     16	Diagnósticos (vocabulario cerrado de parser, M0):
     17	ok, malformed_json, duplicate_key, unknown_field, missing_field,
     18	invalid_type, invalid_value, bad_base64, bad_signature, alg_unsupported,
     19	schema_version_unsupported.
-    20	
+    20
     21	stdlib-only (ADR-006). API EXPERIMENTAL (spec §16): sin compromiso de
     22	estabilidad hasta cerrar M0 con la prueba de implementación independiente.
-    23	
+    23
     24	Uso:
     25	    from ektel_ref_parser import parse_wire
     26	    result = parse_wire(wire_type, raw_bytes, key=test_key)
@@ -1685,7 +1685,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     29	    result.identity_digest  # sólo en sobres aceptados
     30	"""
     31	from __future__ import annotations
-    32	
+    32
     33	import hashlib
     34	import hmac
     35	import json
@@ -1693,44 +1693,44 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     37	from base64 import urlsafe_b64decode
     38	from dataclasses import dataclass
     39	from typing import Any
-    40	
+    40
     41	B64U_ALPHABET = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_")
-    42	
+    42
     43	DOMAINS = {
     44	    "capability": b"ektel/capability/v1\x00",
     45	    "admission-token": b"ektel/admission/v1\x00",
     46	    "termination-token": b"ektel/termination/v1\x00",
     47	}
-    48	
+    48
     49	POP_DOMAIN = b"ektel/pop/v1\x00"
-    50	
+    50
     51	MAX_WIRE_BYTES = 65536
-    52	
-    53	
+    52
+    53
     54	@dataclass
     55	class ParseResult:
     56	    verdict: str
     57	    diagnostic: str
     58	    identity_digest: str | None = None
     59	    value: Any = None
-    60	
-    61	
+    60
+    61
     62	def _reject(diagnostic: str) -> ParseResult:
     63	    return ParseResult("reject", diagnostic)
-    64	
-    65	
+    64
+    65
     66	def _accept(value: Any, identity_digest: str | None = None) -> ParseResult:
     67	    return ParseResult("accept", "ok", identity_digest=identity_digest, value=value)
-    68	
-    69	
+    68
+    69
     70	# ---------------------------------------------------------------------------
     71	# JSON estricto (§5.1)
     72	# ---------------------------------------------------------------------------
-    73	
+    73
     74	def _no_constant(_s: str) -> Any:
     75	    raise ValueError("constant not allowed")
-    76	
-    77	
+    76
+    77
     78	def _strict_loads(raw: bytes) -> tuple[Any, str | None]:
     79	    """Devuelve (objeto, diagnostico_de_rechazo|None)."""
     80	    if len(raw) > MAX_WIRE_BYTES:
@@ -1739,7 +1739,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     83	        text = raw.decode("utf-8")
     84	    except UnicodeDecodeError:
     85	        return None, "malformed_json"
-    86	
+    86
     87	    def no_dupes(pairs):
     88	        obj = {}
     89	        for k, v in pairs:
@@ -1747,7 +1747,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     91	                raise _DuplicateKey(k)
     92	            obj[k] = v
     93	        return obj
-    94	
+    94
     95	    try:
     96	        value = json.loads(text, object_pairs_hook=no_dupes, parse_constant=_no_constant)
     97	    except _DuplicateKey:
@@ -1755,27 +1755,27 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
     99	    except (ValueError, json.JSONDecodeError):
    100	        return None, "malformed_json"
    101	    return value, None
-   102	
-   103	
+   102
+   103
    104	class _DuplicateKey(Exception):
    105	    pass
-   106	
-   107	
+   106
+   107
    108	def _is_int(v: Any) -> bool:
    109	    return isinstance(v, int) and not isinstance(v, bool)
-   110	
-   111	
+   110
+   111
    112	def _is_hex(s: Any, n: int) -> bool:
    113	    return isinstance(s, str) and len(s) == n and all(c in "0123456789abcdef" for c in s)
-   114	
-   115	
+   114
+   115
    116	# ---------------------------------------------------------------------------
    117	# Validación estructural por campos (hand-coded, spec §5.1)
    118	# ---------------------------------------------------------------------------
-   119	
+   119
    120	def _check_object(value: Any, spec: dict[str, tuple[str, Any]], required: set[str]) -> str | None:
    121	    """spec: campo -> ("kind", extra). Devuelve diagnóstico o None.
-   122	
+   122
    123	    kinds: str, int, bool, enum, hex(n), b64u, object(sub), array_str,
    124	    array_obj(sub), map_str, map_int, any
    125	    """
@@ -1794,8 +1794,8 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    138	        if diag:
    139	            return diag
    140	    return None
-   141	
-   142	
+   141
+   142
    143	def _check_kind(v: Any, kind: str, extra: Any) -> str | None:
    144	    if kind == "str":
    145	        if not isinstance(v, str):
@@ -1841,24 +1841,24 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    185	    elif kind == "any":
    186	        return None
    187	    return None
-   188	
-   189	
+   188
+   189
    190	# ---------------------------------------------------------------------------
    191	# Esquemas de campos (fiel a contracts/schemas/v1)
    192	# ---------------------------------------------------------------------------
-   193	
+   193
    194	OUTPUT_LIMITS = ({"max_stdout_bytes": ("int", (0, 67108864)), "max_stderr_bytes": ("int", (0, 67108864))},
    195	                 {"max_stdout_bytes", "max_stderr_bytes"})
-   196	
+   196
    197	GUARANTEE_ENTRY = ({
    198	    "magnitude": ("str", 0), "class": ("enum", ["enforced", "reactive", "observed", "unsupported"]),
    199	    "platform": ("str", 0), "mechanism": ("str", 0),
    200	    "assumptions": ("array_str", 64), "known_escapes": ("array_str", 64),
    201	    "failure_mode": ("str", 0), "evidence_ref": ("str", 0),
    202	}, {"magnitude", "class", "platform", "mechanism", "assumptions", "known_escapes", "failure_mode", "evidence_ref"})
-   203	
+   203
    204	GUARANTEES_ENUM = ["runtime_supervision", "output_bounds", "audit_trail"]
-   205	
+   205
    206	ACTION_BINDING = ({
    207	    "action_id": ("str", 128), "command_absolute": ("str", 0), "args": ("array_str", 256),
    208	    "cwd": ("str", 0), "env_allowlist_values": ("map_str", 64),
@@ -1867,7 +1867,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    211	    "requested_guarantees": ("array_str", 16),
    212	}, {"action_id", "command_absolute", "args", "cwd", "env_allowlist_values",
    213	    "stdin_policy_digest", "deadline_ms", "output_limits", "requested_guarantees"})
-   214	
+   214
    215	CAPABILITY_PAYLOAD = ({
    216	    "schema_version": ("enum", [1]), "issuer_id": ("str", 128), "key_id": ("hex", 16),
    217	    "nonce": ("hex", 32), "nbf": ("int", None), "exp": ("int", None),
@@ -1875,32 +1875,32 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    219	    "action_binding": ("object", ACTION_BINDING),
    220	}, {"schema_version", "issuer_id", "key_id", "nonce", "nbf", "exp",
    221	    "artifact_identity_profile", "action_binding"})
-   222	
+   222
    223	ADMISSION_TOKEN_PAYLOAD = ({
    224	    "schema_version": ("enum", [1]), "identity_digest": ("hex", 64),
    225	    "action_id": ("str", 128), "exp": ("int", None), "issuer_id": ("str", 128),
    226	}, {"schema_version", "identity_digest", "action_id", "exp", "issuer_id"})
-   227	
+   227
    228	TERMINATION_TOKEN_PAYLOAD = ({
    229	    "schema_version": ("enum", [1]), "action_id": ("str", 128), "identity_digest": ("hex", 64),
    230	}, {"schema_version", "action_id", "identity_digest"})
-   231	
+   231
    232	PAYLOAD_SPECS = {
    233	    "capability": CAPABILITY_PAYLOAD,
    234	    "admission-token": ADMISSION_TOKEN_PAYLOAD,
    235	    "termination-token": TERMINATION_TOKEN_PAYLOAD,
    236	}
-   237	
+   237
    238	INVOCATION_PROOF = ({
    239	    "schema_version": ("enum", [1]), "nonce": ("hex", 32),
    240	    "payload_digest": ("hex", 64), "mac": ("hex", 64),
    241	}, {"schema_version", "nonce", "payload_digest", "mac"})
-   242	
+   242
    243	STDIN_POLICY = ({
    244	    "kind": ("enum", ["empty", "inline_b64"]),
    245	    "data_b64": ("b64u", 0), "sha256": ("hex", 64),
    246	}, {"kind"})
-   247	
+   247
    248	ACTION_REQUEST = ({
    249	    "schema_version": ("enum", [1]), "action_id": ("str", 128),
    250	    "command_absolute": ("str", 0), "args": ("array_str", 256), "cwd": ("str", 0),
@@ -1914,7 +1914,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    258	    "env_allowlist_values", "stdin_policy", "deadline_ms", "capability_envelope",
    259	    "invocation_proof", "nonce", "repair_policy", "output_limits",
    260	    "requested_guarantees", "metadata_opaque"})
-   261	
+   261
    262	ADMISSION_OUTCOME = ({
    263	    "schema_version": ("enum", [1]), "outcome": ("enum", ["admitted", "admission_rejected"]),
    264	    "admitted_action": ("str", 0), "identity_digest": ("hex", 64),
@@ -1924,19 +1924,19 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    268	                             "policy_unavailable", "audit_unavailable", "guarantee_unsupported"]),
    269	    "safe_detail": ("str", 512), "retryable": ("bool", None), "evidence_receipt": ("str", 0),
    270	}, {"schema_version", "outcome"})
-   271	
+   271
    272	START_OUTCOME = ({
    273	    "schema_version": ("enum", [1]), "outcome": ("enum", ["started", "start_failed"]),
    274	    "handle_ref": ("hex", 16),
    275	    "reason_code": ("enum", ["start_failed", "start_failed_indeterminate", "capability_rejected"]),
    276	    "safe_detail": ("str", 512),
    277	}, {"schema_version", "outcome"})
-   278	
+   278
    279	TERMINATION_OUTCOME = ({
    280	    "schema_version": ("enum", [1]), "outcome": ("enum", ["termination_accepted", "termination_rejected"]),
    281	    "receipt": ("str", 0), "reason_code": ("enum", ["capability_rejected"]), "safe_detail": ("str", 512),
    282	}, {"schema_version", "outcome"})
-   283	
+   283
    284	EXECUTION_RESULT = ({
    285	    "schema_version": ("enum", [1]), "action_id": ("str", 128), "identity_digest": ("hex", 64),
    286	    "state": ("enum", ["executed", "deadline_exceeded", "terminated", "supervision_failed"]),
@@ -1952,7 +1952,7 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    296	    "discarded_bytes": ("int", None), "last_event_receipt": ("str", 0),
    297	}, {"schema_version", "action_id", "identity_digest", "state",
    298	    "artifact_identity_profile", "guarantees_applied"})
-   299	
+   299
    300	DOCUMENT_SPECS = {
    301	    "action-request": ACTION_REQUEST,
    302	    "admission-outcome": ADMISSION_OUTCOME,
@@ -1961,37 +1961,37 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    305	    "execution-result": EXECUTION_RESULT,
    306	    "invocation-proof": INVOCATION_PROOF,
    307	}
-   308	
-   309	
+   308
+   309
    310	# ---------------------------------------------------------------------------
    311	# Primitivas criptográficas (perfil byte-exacto v1, C2)
    312	# ---------------------------------------------------------------------------
-   313	
+   313
    314	def _b64u_decode(s: str) -> bytes:
    315	    if any(c not in B64U_ALPHABET for c in s):
    316	        raise ValueError("bad_base64")
    317	    pad = (-len(s)) % 4
    318	    return urlsafe_b64decode(s + "=" * pad)
-   319	
-   320	
+   319
+   320
    321	def _mac_envelope(key: bytes, typ: str, phb64: str, plb64: str) -> bytes:
    322	    msg = DOMAINS[typ] + phb64.encode("ascii") + b"." + plb64.encode("ascii")
    323	    return hmac.new(key, msg, hashlib.sha256).digest()
-   324	
-   325	
+   324
+   325
    326	def identity_digest(phb64: str, plb64: str) -> str:
    327	    return hashlib.sha256((phb64 + "." + plb64).encode("ascii")).hexdigest()
-   328	
-   329	
+   328
+   329
    330	# ---------------------------------------------------------------------------
    331	# Parsers por wire type
    332	# ---------------------------------------------------------------------------
-   333	
+   333
    334	ENVELOPE_SPEC = ({
    335	    "protected_header_b64": ("b64u", 0), "payload_b64": ("b64u", 0), "signature": ("b64u", 0),
    336	}, {"protected_header_b64", "payload_b64", "signature"})
-   337	
-   338	
+   337
+   338
    339	def parse_envelope(typ: str, raw: bytes, key: bytes) -> ParseResult:
    340	    value, diag = _strict_loads(raw)
    341	    if diag:
@@ -2043,8 +2043,8 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    387	    if diag:
    388	        return _reject(diag)
    389	    return _accept(payload, identity_digest=identity_digest(phb64, plb64))
-   390	
-   391	
+   390
+   391
    392	def parse_invocation_proof(raw: bytes, key: bytes) -> ParseResult:
    393	    value, diag = _strict_loads(raw)
    394	    if diag:
@@ -2060,8 +2060,8 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    404	    if not hmac.compare_digest(mac, expected):
    405	        return _reject("bad_signature")
    406	    return _accept(value)
-   407	
-   408	
+   407
+   408
    409	def parse_document(wire_type: str, raw: bytes) -> ParseResult:
    410	    value, diag = _strict_loads(raw)
    411	    if diag:
@@ -2075,8 +2075,8 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    419	    if diag:
    420	        return _reject(diag)
    421	    return _accept(value)
-   422	
-   423	
+   422
+   423
    424	def parse_wire(wire_type: str, raw: bytes, key: bytes) -> ParseResult:
    425	    if wire_type in ENVELOPE_TYPES:
    426	        return parse_envelope(ENVELOPE_TYPES[wire_type], raw, key)
@@ -2085,21 +2085,21 @@ python3 -m unittest discover -s tests" in /Users/krisnova/www/aria/ektel
    429	    if wire_type in DOCUMENT_SPECS:
    430	        return parse_document(wire_type, raw)
    431	    raise ValueError(f"wire type desconocido: {wire_type}")
-   432	
-   433	
+   432
+   433
    434	ENVELOPE_TYPES = {
    435	    "capability-envelope": "capability",
    436	    "admission-token": "admission-token",
    437	    "termination-token": "termination-token",
    438	}
-   439	
+   439
    440	WIRE_TYPES = sorted(list(ENVELOPE_TYPES) + ["invocation-proof"] + list(DOCUMENT_SPECS))
-   441	
-   442	
+   441
+   442
    443	if __name__ == "__main__":
    444	    import sys
    445	    from base64 import b64decode
-   446	
+   446
    447	    wire_type, vector_file = sys.argv[1], sys.argv[2]
    448	    doc = json.loads(open(vector_file, encoding="utf-8").read())
    449	    test_key = bytes.fromhex(doc.get("test_key_hex", ""))
@@ -2242,50 +2242,50 @@ Traceback (most recent call last):
     return binascii.a2b_base64(s)
 binascii.Error: Incorrect padding
      1	# Task Group: Ektel governed M0–M3 architecture, consensus, and maintainer continuity
-     2	
+     2
      3	scope: Ektel preimplementation audits, non-binding M0–M3 proposals, D1–D7/D7a consensus work, AN-KLA maintainer memory, and governed publication.
      4	applies_to: cwd=/Users/krisnova/www/aria/ektel; reuse_rule=Treat commit/checkpoint facts as snapshots; proposal and conversational consensus do not authorize runtime, schema, ADR, or normative changes.
-     5	
+     5
      6	## Task 1: Independent v1.1/B1–B8 contractual audit, partial / NO-GO
-     7	
+     7
      8	### rollout_summary_files
-     9	
+     9
     10	- rollout_summaries/2026-08-17T16-49-54-L8Ev-ektel_v1_1_adversarial_contract_audit_no_go.md (cwd=/Users/krisnova/www/aria/ektel, rollout_path=/Users/krisnova/.codex/sessions/2026/08/17/rollout-2026-08-17T10-49-54-01a010a1-2fe1-7440-b924-77bd83e64ec7.jsonl, updated_at=2026-08-20T14:49:22+00:00, thread_id=01a010a1-2fe1-7440-b924-77bd83e64ec7, read-only independent audit)
-    11	
+    11
     12	### keywords
-    13	
+    13
     14	- Ektel, v1.1, B1-B8, ExecutionResult, AdmissionOutcome, StartOutcome, HMAC, TrustedHeadStore, nonce_reservation, start_token_consumption, ExecutionHandle, soft_termination_at, hard_deadline_at, NO-GO
-    15	
+    15
     16	## Task 2: Adversarial consolidation and pre-consensus characterization, success
-    17	
+    17
     18	### rollout_summary_files
-    19	
+    19
     20	- rollout_summaries/2026-08-14T18-38-15-OvWg-ektel_consolidacion_adversarial_consenso_y_suite.md (cwd=/Users/krisnova/www/aria/ektel, rollout_path=/Users/krisnova/.codex/sessions/2026/08/14/rollout-2026-08-14T12-38-15-01a00191-4eeb-77c2-9e66-23e91f8b1e38.jsonl, updated_at=2026-08-14T19:58:21+00:00, thread_id=01a00191-4eeb-77c2-9e66-23e91f8b1e38)
-    21	
+    21
     22	### keywords
-    23	
+    23
     24	- Ektel, G0–G5, G3a, G3b, F-R, F-S, F-M, killpg, RUSAGE_CHILDREN, pre-consenso-v0.3, tests/escape
-    25	
+    25
     26	## Task 3: Read-only audit, critical proposal review, and D7a artifact identity, partial
-    27	
+    27
     28	### rollout_summary_files
-    29	
+    29
     30	- rollout_summaries/2026-08-18T15-58-57-YO4Y-ektel_auditoria_critica_propuesta_consenso_d7a.md (cwd=/Users/krisnova/www/aria/ektel, rollout_path=/Users/krisnova/.codex/sessions/2026/08/18/rollout-2026-08-18T09-58-57-01a01598-e649-7e71-b357-0026377835fc.jsonl, updated_at=2026-08-18T16:25:07+00:00, thread_id=01a01598-e649-7e71-b357-0026377835fc)
-    31	
+    31
     32	### keywords
-    33	
+    33
     34	- D1-D7, D7a, ExecutionIdentity v1, artifact_identity_profile, route_mutable_unverified, admission_rejected, TOCTOU, AuditSink, deadline_exceeded, Darwin, Linux
-    35	
+    35
     36	## User preferences
-    37	
+    37
     38	- When the user asks for “análisis crítico/propositivo” of work already applied, verify the diff, documents, and tests rather than accepting another agent’s summary as evidence; preserve the read-only boundary unless writes are authorized. [Task 1]
     39	- When the user asks for “análisis crítico/propositivo” before implementation, keep proposal, adversarial review, consensus, and construction separate; a deliberate stop at M3 is not an implementation authorization. [Task 2]
     40	- “no crees codigo sin mi autorizacion”; characterization tests may be created only when explicitly authorized and must not be presented as runtime implementation. [Task 2]
     41	- When asked to “analiza estado del proyecto”, perform a read-only review and report “No hice cambios”; prioritize evidence, unresolved blockers, and verification before modifying. [Task 3]
     42	- When asked for text to copy manually into `AGENTS.md`, provide explicit states, authority, empirical gates, authorization criteria, and stop rules. [Task 3]
-    43	
+    43
     44	## Reusable knowledge
-    45	
+    45
     46	- Ektel remains a documentary preimplementation: no runtime, implemented wire schemas, or product CI. At the latest audit `60f13de25e762d2d70a66616d68924212e613cb1` matched `origin/main`, the tree was clean, AN-KLA `context status`/`verify` passed, `pytest` reported `5 passed, 3 skipped`, and host tests ran 5 with 3 Linux-only skips. These checks characterize the package/host; they do not implement a product. [Task 1]
     47	- B1–B8 were substantially applied (MAC-free receipts, `terminate(ExecutionHandle, ...)`, nonce/admission CAS, authenticated protected header, output drain, `valid_until`, and protocol-level `durable`), but v1.1 still lacks interoperable contracts. Next appropriate work is a v1.2 contractual correction, cross-review, and explicit consensus, not M0 code. [Task 1]
     48	- Before adoption, split API outcomes so paths without a handle cannot appear through `await_result(handle)`: `AdmissionOutcome`, `StartOutcome`, `ExecutionResult`, and `TerminationOutcome`. Specify one byte-level cryptographic profile; define `TrustedHeadStore`/`verify_chain(events, trusted_head)` or remove C8; and specify CAS keys/states/loser/recovery and post-crash `start_failed_indeterminate`. [Task 1]
@@ -2293,16 +2293,16 @@ binascii.Error: Incorrect padding
     50	- CAGF reserves P0 for the Premisa Normativa, archives the former constitutional P1–P8, and keeps runtime A10 deferred/not authorized. Keep CAGF as an external optional adapter, never embedded Ektel core logic. M0–M3 is non-binding. [Task 3]
     51	- Before adopting M1, close guarantee/evidence taxonomy, `admit`→`start` linearization, artifact TOCTOU, observable deadline/termination precedence, and AuditSink profiles/idempotence/reconciliation. Sampled CPU/RSS stays G3b/F-S and cannot emit `budget_exceeded` without reproducible coverage for ephemeral processes, reparenting, and churn. [Task 2][Task 3]
     52	- Proposed D7a: signed `ExecutionIdentity v1.artifact_identity_profile` has only `route_mutable_unverified` in M0 and is repeated in the result. It binds `command_absolute` as a route, not immutable content. Unsupported requested guarantees must receive closed-code `admission_rejected`, never silently downgrade. [Task 3]
-    53	
+    53
     54	## Failures and how to do differently
-    55	
+    55
     56	- **NO-GO** for v1.1 consensus/approval or M0 start: passing tests and a clean tree do not cure incompatible API outcomes, alternative crypto constructions, undefined trusted-head/CAS/handle contracts, or ambiguous deadline/grace semantics. [Task 1]
     57	- Do not call a proposal or copied consensus package authorization for M0; D7a is conversational only until schemas, ADRs, and repository documents formally adopt it. [Task 3]
     58	- A hash at admission and again before `exec` does not close TOCTOU. A high-integrity future profile needs an open/verify/launch mechanism plus platform-specific evidence; do not equate Darwin with Linux or assume a Darwin `fexecve` equivalent. [Task 3]
     59	- `deadline_exceeded` records a transition observed by a live supervisor; it does not prove universal process death or external repair. Likewise `killpg`, CPU/RSS, and `RUSAGE_CHILDREN` must remain within their characterized evidence boundaries. [Task 1][Task 3]
-    60	
+    60
     61	# Task Group: EMD AN-KLA memory pilot and secure recurrent patient access
-    62	
+    62
 
 2026-08-21T00:14:47.473217Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
 exec
@@ -2331,7 +2331,7 @@ contracts/schemas/v1/admission-outcome.schema.json:36:        "capability_reused
 codex
 Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El checkout actual contiene ese commit como ancestro; la única diferencia posterior es el encargo. No hice cambios.
 
-1. **Bloqueante — la independencia R5 falla materialmente: los parsers divergen en entradas válidas criptográficamente.**  
+1. **Bloqueante — la independencia R5 falla materialmente: los parsers divergen en entradas válidas criptográficamente.**
    Evidencia reproducida en memoria:
 
    - `action-request` válido, alterando sólo `capability_envelope` a `"not-an-envelope"`: parser A → `accept/ok`; clean-room → `reject/invalid_type`.
@@ -2339,7 +2339,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    Causa verificable: el parser A trata los subcampos `capability_envelope` e `invocation_proof` como `any` ([ektel_ref_parser.py](/Users/krisnova/www/aria/ektel/contracts/parsers/reference/ektel_ref_parser.py:253)), ignora mínimos para varios enteros porque usa `extra=None` ([líneas 149-153](/Users/krisnova/www/aria/ektel/contracts/parsers/reference/ektel_ref_parser.py:149)), y no reproduce patrones ni enums de `command_absolute`, `cwd` y `requested_guarantees`. El clean-room sí carga y aplica los `$ref`, `minimum`, `pattern` y `enum` de los schemas. Los 31 vectores no ejercen estas diferencias; por tanto, que ambos pasen el corpus no demuestra interoperabilidad.
 
-2. **Bloqueante — los schemas admiten representaciones que contradicen las uniones por operación de §8.2/§8.3.**  
+2. **Bloqueante — los schemas admiten representaciones que contradicen las uniones por operación de §8.2/§8.3.**
    `{"schema_version":1,"outcome":"started"}` es aceptado por ambos parsers, aunque §8.3 define `Started { handle }`; el schema sólo requiere `schema_version,outcome` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:8)). El mismo defecto estructural existe en:
 
    - `AdmissionOutcome`: `admitted` no obliga `admitted_action`, `identity_digest`, `guarantee_plan`; `admission_rejected` no obliga `reason_code`, `safe_detail`, `retryable`.
@@ -2347,11 +2347,11 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    §8.2 especifica explícitamente los campos de ambas alternativas y §8.3 prohíbe estados que la interfaz no puede producir. Requiere `oneOf`/discriminación condicional o equivalente en ambos parsers.
 
-3. **Bloqueante — el vocabulario cerrado de `StartFailed` contiene un código extra.**  
-   §8.3 fija `start_failed` y `start_failed_indeterminate` como los códigos de `StartFailed`; `capability_rejected` corresponde a rechazo de admisión y a `TerminationRejected` sin handle válido. Sin embargo, el schema de start añade `capability_rejected` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:13)). Esto rompe el cierre contractual.  
+3. **Bloqueante — el vocabulario cerrado de `StartFailed` contiene un código extra.**
+   §8.3 fija `start_failed` y `start_failed_indeterminate` como los códigos de `StartFailed`; `capability_rejected` corresponde a rechazo de admisión y a `TerminationRejected` sin handle válido. Sin embargo, el schema de start añade `capability_rejected` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:13)). Esto rompe el cierre contractual.
    Lo demás sí coincide en lo principal: `ExecutionResult` tiene exactamente los cuatro estados post-inicio y no incluye `budget_exceeded` ([execution-result.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/execution-result.schema.json:16)); clases de garantía y el único perfil `route_mutable_unverified` también están cerrados. Es consistente con Claims/No-claims, que excluyen `budget_exceeded` y no reclaman identidad del binario.
 
-4. **Menor — el corpus adversarial es insuficiente para los riesgos que pretende detectar.**  
+4. **Menor — el corpus adversarial es insuficiente para los riesgos que pretende detectar.**
    Hay 31 vectores en seis grupos, y `python3 -m unittest tests.contract.test_golden_vectors` pasó `2/2`; pero faltan al menos estos vectores concretos, todos firmados/MAC-correctos cuando corresponda:
 
    - `areq-invalid-capability-envelope-scalar` e `areq-invalid-invocation-proof-scalar`: descubren la aceptación de `$ref` como `any` en A.
@@ -2361,7 +2361,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
    - `cap-invalid-crossed-typ-domain`: MAC correcto en dominio capability pero `typ=admission-token`, esperado rechazo tras verificar MAC.
    - Casos de base64url no canónico, si “estricto” pretende canonicalidad además de alfabeto/sin padding; la norma debe precisarlo antes de fijar un vector.
 
-5. **Nota — C2 byte-exacto de `cap-valid-01` sí verifica.**  
+5. **Nota — C2 byte-exacto de `cap-valid-01` sí verifica.**
    Con la clave pública de prueba de `index.json` (`000102…1e1f`), recalculé:
 
    - Entrada MAC: `ASCII("ektel/capability/v1") || 00 || protected_header_b64 || 2e || payload_b64`.
@@ -2371,7 +2371,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    Coinciden byte a byte con el vector y el índice. El código también usa los cuatro dominios requeridos y no contiene HKDF. Esto no atenúa los hallazgos 1–3.
 
-6. **Nota — límite de verificación ambiental.**  
+6. **Nota — límite de verificación ambiental.**
    La suite completa no pudo reproducirse: `unittest discover` ejecutó 10 pruebas, con 3 skips y un error en `test_flush_primitive_available` porque el sandbox no permite crear un archivo temporal. Es una limitación del entorno, no evidencia contra el commit. La suite contractual específica pasó.
 
 **Ronda adversarial y retracciones**
@@ -2388,7 +2388,7 @@ tokens used
 73,857
 Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El checkout actual contiene ese commit como ancestro; la única diferencia posterior es el encargo. No hice cambios.
 
-1. **Bloqueante — la independencia R5 falla materialmente: los parsers divergen en entradas válidas criptográficamente.**  
+1. **Bloqueante — la independencia R5 falla materialmente: los parsers divergen en entradas válidas criptográficamente.**
    Evidencia reproducida en memoria:
 
    - `action-request` válido, alterando sólo `capability_envelope` a `"not-an-envelope"`: parser A → `accept/ok`; clean-room → `reject/invalid_type`.
@@ -2396,7 +2396,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    Causa verificable: el parser A trata los subcampos `capability_envelope` e `invocation_proof` como `any` ([ektel_ref_parser.py](/Users/krisnova/www/aria/ektel/contracts/parsers/reference/ektel_ref_parser.py:253)), ignora mínimos para varios enteros porque usa `extra=None` ([líneas 149-153](/Users/krisnova/www/aria/ektel/contracts/parsers/reference/ektel_ref_parser.py:149)), y no reproduce patrones ni enums de `command_absolute`, `cwd` y `requested_guarantees`. El clean-room sí carga y aplica los `$ref`, `minimum`, `pattern` y `enum` de los schemas. Los 31 vectores no ejercen estas diferencias; por tanto, que ambos pasen el corpus no demuestra interoperabilidad.
 
-2. **Bloqueante — los schemas admiten representaciones que contradicen las uniones por operación de §8.2/§8.3.**  
+2. **Bloqueante — los schemas admiten representaciones que contradicen las uniones por operación de §8.2/§8.3.**
    `{"schema_version":1,"outcome":"started"}` es aceptado por ambos parsers, aunque §8.3 define `Started { handle }`; el schema sólo requiere `schema_version,outcome` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:8)). El mismo defecto estructural existe en:
 
    - `AdmissionOutcome`: `admitted` no obliga `admitted_action`, `identity_digest`, `guarantee_plan`; `admission_rejected` no obliga `reason_code`, `safe_detail`, `retryable`.
@@ -2404,11 +2404,11 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    §8.2 especifica explícitamente los campos de ambas alternativas y §8.3 prohíbe estados que la interfaz no puede producir. Requiere `oneOf`/discriminación condicional o equivalente en ambos parsers.
 
-3. **Bloqueante — el vocabulario cerrado de `StartFailed` contiene un código extra.**  
-   §8.3 fija `start_failed` y `start_failed_indeterminate` como los códigos de `StartFailed`; `capability_rejected` corresponde a rechazo de admisión y a `TerminationRejected` sin handle válido. Sin embargo, el schema de start añade `capability_rejected` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:13)). Esto rompe el cierre contractual.  
+3. **Bloqueante — el vocabulario cerrado de `StartFailed` contiene un código extra.**
+   §8.3 fija `start_failed` y `start_failed_indeterminate` como los códigos de `StartFailed`; `capability_rejected` corresponde a rechazo de admisión y a `TerminationRejected` sin handle válido. Sin embargo, el schema de start añade `capability_rejected` ([start-outcome.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/start-outcome.schema.json:13)). Esto rompe el cierre contractual.
    Lo demás sí coincide en lo principal: `ExecutionResult` tiene exactamente los cuatro estados post-inicio y no incluye `budget_exceeded` ([execution-result.schema.json](/Users/krisnova/www/aria/ektel/contracts/schemas/v1/execution-result.schema.json:16)); clases de garantía y el único perfil `route_mutable_unverified` también están cerrados. Es consistente con Claims/No-claims, que excluyen `budget_exceeded` y no reclaman identidad del binario.
 
-4. **Menor — el corpus adversarial es insuficiente para los riesgos que pretende detectar.**  
+4. **Menor — el corpus adversarial es insuficiente para los riesgos que pretende detectar.**
    Hay 31 vectores en seis grupos, y `python3 -m unittest tests.contract.test_golden_vectors` pasó `2/2`; pero faltan al menos estos vectores concretos, todos firmados/MAC-correctos cuando corresponda:
 
    - `areq-invalid-capability-envelope-scalar` e `areq-invalid-invocation-proof-scalar`: descubren la aceptación de `$ref` como `any` en A.
@@ -2418,7 +2418,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
    - `cap-invalid-crossed-typ-domain`: MAC correcto en dominio capability pero `typ=admission-token`, esperado rechazo tras verificar MAC.
    - Casos de base64url no canónico, si “estricto” pretende canonicalidad además de alfabeto/sin padding; la norma debe precisarlo antes de fijar un vector.
 
-5. **Nota — C2 byte-exacto de `cap-valid-01` sí verifica.**  
+5. **Nota — C2 byte-exacto de `cap-valid-01` sí verifica.**
    Con la clave pública de prueba de `index.json` (`000102…1e1f`), recalculé:
 
    - Entrada MAC: `ASCII("ektel/capability/v1") || 00 || protected_header_b64 || 2e || payload_b64`.
@@ -2428,7 +2428,7 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 
    Coinciden byte a byte con el vector y el índice. El código también usa los cuatro dominios requeridos y no contiene HKDF. Esto no atenúa los hallazgos 1–3.
 
-6. **Nota — límite de verificación ambiental.**  
+6. **Nota — límite de verificación ambiental.**
    La suite completa no pudo reproducirse: `unittest discover` ejecutó 10 pruebas, con 3 skips y un error en `test_flush_primitive_available` porque el sandbox no permite crear un archivo temporal. Es una limitación del entorno, no evidencia contra el commit. La suite contractual específica pasó.
 
 **Ronda adversarial y retracciones**
@@ -2439,5 +2439,3 @@ Auditoría de solo lectura sobre `33da6f81ffc878b1251eaf6c37bbfce7ac49364f`. El 
 - **Retracción:** no afirmo que la base64url no canónica sea hoy un incumplimiento; lo reporto como ambigüedad/vector pendiente porque “estricto” no define expresamente la canonicalidad de bits residuales.
 
 Conclusión: **NO-GO para declarar dos parsers interoperables o cerrar M0 contractual** hasta corregir los hallazgos bloqueantes y ampliar el corpus con casos que separen implementaciones.
-
-

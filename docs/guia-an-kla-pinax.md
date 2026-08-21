@@ -8,7 +8,8 @@
 ## Dónde está todo
 
 - CLI: `.venv/bin/python -m an_kla --project-root . <subcomando>`
-  (venv propio de pinax, Python 3.12, tag exacto `v0.1.0-beta.15`).
+  (venv propio de pinax, Python 3.12; versión local observada `0.1.0b16`
+  al 2026-08-21). La beta.17 publicada no se instala sin autorización propia.
 - Memoria local: `.an-kla/` — **gitignored, nunca versionar** (precedente:
   ektel la tiene en `.gitignore`; commit `54c1109`).
 - El bloque gestionado en `AGENTS.md` no se edita a mano; se muta con

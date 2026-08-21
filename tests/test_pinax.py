@@ -74,6 +74,70 @@ def test_acepta_paquete_en_publica():
     assert not pinax.validate(d, "x")
 
 
+def test_acepta_descubrimiento_como_argv_estructurado():
+    d = base() | {
+        "descubrimiento": {
+            "argv": ["python3", "-m", "an_kla", "capabilities"],
+            "expected_exit_code": 0,
+        }
+    }
+    assert not pinax.validate(d, "x")
+
+
+def test_rechaza_descubrimiento_como_texto_de_shell():
+    d = base() | {"descubrimiento": {"comando": "python3 -m an_kla capabilities"}}
+    errores = pinax.validate(d, "x")
+    assert errores, "un comando de shell no debe cumplir el contrato argv"
+
+
+def test_rechaza_descubrimiento_sin_programa_o_con_controles():
+    for argv in (
+        [],
+        [""],
+        ["python3", "linea\nnueva"],
+        ["python3", "retorno\rcarro"],
+        ["python3", "separador\u2028linea"],
+        ["python3", "separador\u2029parrafo"],
+        ["python3", "nul\0"],
+        ["python3"] + ["x"] * 64,
+    ):
+        d = base() | {"descubrimiento": {"argv": argv}}
+        assert pinax.validate(d, "x"), argv
+
+
+def test_rechaza_descubrimiento_con_exit_invalido_o_campo_extra():
+    casos = (
+        {"argv": ["tool"], "expected_exit_code": -1},
+        {"argv": ["tool"], "expected_exit_code": 256},
+        {"argv": ["tool"], "expected_exit_code": True},
+        {"argv": ["tool"], "esperado": "exit 0"},
+    )
+    for descubrimiento in casos:
+        d = base() | {"descubrimiento": descubrimiento}
+        assert pinax.validate(d, "x"), descubrimiento
+
+
+def test_argv_estructurado_no_promete_programa_seguro():
+    descubrimiento = {"argv": ["sh", "-c", "touch /tmp/no-ejecutar"]}
+    d = base() | {"descubrimiento": descubrimiento}
+    assert not pinax.validate(d, "x")
+    out = pinax.render(pinax.BuildResult([d], [], []))
+    assert '["sh","-c","touch /tmp/no-ejecutar"]' in out
+    assert "no significa programa seguro" in out
+
+
+def test_build_renderiza_descubrimiento_sin_ejecutarlo():
+    result = pinax.BuildResult(
+        [base() | {"descubrimiento": {"argv": ["python3", "-m", "demo"]}}],
+        [],
+        [],
+    )
+    out = pinax.render(result)
+    assert '["python3","-m","demo"]' in out
+    assert "código de salida esperado: `0`" in out
+    assert "shell=False" in out
+
+
 def test_rechaza_tipo_invalido():
     d = base() | {"publica": [{"tipo": "cosa", "id": "x"}]}
     assert any("tipo" in e for e in pinax.validate(d, "x"))

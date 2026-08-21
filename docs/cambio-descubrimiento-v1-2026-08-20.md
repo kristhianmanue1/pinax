@@ -1,11 +1,12 @@
 # Cambio aditivo v1: campo `descubrimiento` — quién hace qué (2026-08-20)
 
 **Qué se hizo:** el schema `pinax/project-manifest/v1` acepta ahora
-`descubrimiento: {comando, esperado?}` — el comando estático que un agente
-puede ejecutar para descubrir qué ofrece una herramienta sin leer memoria
-ni estado. Cambio **aditivo y retrocompatible** dentro de v1 (regla de
-compatibilidad de AGENTS.md): los manifiestos existentes siguen válidos
-(27/27 pruebas en verde) y los que no lo declaren no cambian.
+`descubrimiento: {argv, expected_exit_code?}` — los argumentos estructurados
+que describen cómo descubrir qué ofrece una herramienta sin leer memoria ni
+estado. No es una cadena de shell. Cambio **aditivo y retrocompatible** dentro
+de v1 (regla de compatibilidad de AGENTS.md): los manifiestos existentes siguen
+válidos (33/33 pruebas en el gate final, snapshot 2026-08-21) y los que no lo
+declaren no cambian.
 
 **Por qué:** el análisis `docs/analisis-garantias-2026-08-20.md` mostró que
 el descubrimiento de herramientas vivía en un documento temporal
@@ -17,17 +18,21 @@ el descubrimiento de herramientas vivía en un documento temporal
 | Quién | Qué | Estado |
 |---|---|---|
 | **Pinax** (schema, validador, generador) | Añadir el campo al schema; renderizarlo en MAPA.md bajo "Cómo descubrir cada herramienta"; nunca ejecutar el comando en `build` | **Hecho** 2026-08-20 (commit de este documento) |
-| **Pinax** (futuro) | Comando de verificación opt-in (`pinax verify-descubrimiento` o similar): ejecuta `comando` y comprueba `esperado`, **sólo bajo autorización explícita del operador por corrida** — ejecutar autodeclaraciones a ciegas es ejecutar texto no confiable | Propuesto, no autorizado |
+| **Pinax** (futuro) | Verificación opt-in (`pinax verify-descubrimiento` o similar): construye `argv` directamente, con `shell=False`, cwd controlado, entorno mínimo y límites; comprueba `expected_exit_code`, **sólo bajo autorización explícita sobre el argv exacto** | Propuesto, no autorizado |
 | **Mediador** | Nada que hacer: el campo no introduce identificadores nuevos ni afecta la inclusión en el mapa | — |
-| **Mantenedor de cada proyecto** | Declarar `descubrimiento` en su `project-manifest.yaml` con su comando real (`an_kla capabilities`, `epistates describe`, `consultar listar`, …). Adopción **voluntaria**, como todo en v1 | Pendiente — proyecto por proyecto |
-| **Agentes consumidores** | Antes de usar una herramienta de aria: leer el mapa y ejecutar su comando de descubrimiento | Regla de uso, no obligación técnica (la obligación estructural sigue siendo de ektel, inexistente) |
+| **Mantenedor de cada proyecto** | Declarar `descubrimiento` en su `project-manifest.yaml` como lista argv real (`["python3", "-m", "an_kla", "capabilities"]`, por ejemplo). Adopción **voluntaria**, como todo en v1 | Pendiente — proyecto por proyecto |
+| **Agentes consumidores** | Leer el mapa; cualquier ejecución requiere autorización separada y un runner sin shell | Regla de uso, no obligación técnica |
 
 ## Frontera de confianza declarada
 
-`descubrimiento` es autodeclaración: que un manifiesto afirme un comando no
-prueba que funcione, y ejecutarlo sin autorización sería una violación de la
-frontera (texto no confiable → proceso). Por eso el mapa lo publica con la
-advertencia y la verificación es un acto separado y autorizado.
+`descubrimiento` es autodeclaración: que un manifiesto publique una lista argv
+no prueba que funcione, y ejecutarla sin autorización sería una violación de la
+frontera (texto no confiable → proceso). La forma estructurada evita que una
+futura implementación necesite interpretar shell, pero no concede autoridad.
+`shell=False` sólo evita que el runner introduzca un shell implícito: no vuelve
+seguro el programa declarado, que puede ser por sí mismo un shell o intérprete.
+Por eso no se usa una lista negra incompleta; el operador revisa ejecutable y
+argumentos exactos antes de cada corrida autorizada.
 
 ## Compatibilidad
 
