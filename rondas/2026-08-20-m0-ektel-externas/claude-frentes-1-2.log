@@ -1,0 +1,61 @@
+## Frente 2 — verificación manual byte-exacta de `cap-valid-01` ✅
+
+Recomputado de forma independiente (sin usar los parsers), con `test_key_hex` de `contracts/vectors/v1/index.json` (`000102…1e1f`):
+
+```
+entrada MAC = ASCII("ektel/capability/v1") || 0x00 || ph_b64 || "." || pl_b64
+MAC calculado  8d54b18fc8bafc8b6c51c1b690096363ee132673e6f5e88b748abba4e75cf7ce
+signature vect 8d54b18fc8bafc8b6c51c1b690096363ee132673e6f5e88b748abba4e75cf7ce   → IGUAL
+b64url         jVSxj8i6_ItsUcG2kAljY-4TJnPm9eiLdIq7pOdc984 (43 chars, sin '=')
+
+identity_digest = SHA256(ASCII(ph_b64 || "." || pl_b64))
+calculado      a7ef98078ab6a40c0280a9d95f678a051e499327b8505afc4fab6e8736cc56cb
+vector/index   a7ef98078ab6a40c0280a9d95f678a051e499327b8505afc4fab6e8736cc56cb   → IGUAL
+```
+
+Comprobado además: header autenticado `{"alg":"HS256","schema_version":1,"typ":"capability"}`; los tres campos b64url sin padding (`len%4 ∈ {0,3}`, sin `=`); dominios `ektel/{capability,pop,admission,termination}/v1` con terminador `0x00` y sin HKDF en ninguno de los dos parsers; PoP con `len32be(nonce)`; ambos parsers verifican el MAC **antes** de decodificar header y payload (`ektel_ref_parser.py:352-360`, `ektel_cleanroom_parser.py:246-256`) y ninguno re-serializa. `cap-valid-01` presentado como `admission-token` → `bad_signature` en ambos: la separación de dominios funciona. Sin hallazgos en este frente.
+
+## Frente 1 — fidelidad norma ↔ código
+
+### Bloqueantes
+
+**1. `reason_code` de `AdmissionRejected` contiene tres códigos que la norma prohíbe explícitamente.**
+`contracts/schemas/v1/admission-outcome.schema.json` y `ektel_ref_parser.py:296-299` admiten `capability_invalid`, `capability_expired`, `capability_reused`. La spec §8.3 (líneas 283-284) dice literalmente: «capacidad inválida/expirada/reutilizada **con `reason_code` `capability_rejected`**»; ADR-005 §23-26 lo repite («`capability_rejected` como `reason_code` de `AdmissionRejected`»), y propuesta §11 tabula «Capacidad inválida o expirada → `capability_rejected`». No es ambigüedad: la norma colapsa los tres casos en un código y el contrato los desdobla. Agravante: el vector dorado `aout-valid-rejected` **canoniza** el código inventado (`{"reason_code":"capability_expired",…}`), de modo que congelar M0 congela la divergencia.
+
+**2. El parser A no implementa reglas normativas de §5.1 que los schemas sí codifican; ningún vector lo detecta.** Ocho divergencias probadas contra el parser B partiendo de `areq-valid-01` y `cap-valid-01`:
+
+| mutación | parser A | parser B |
+|---|---|---|
+| `requested_guarantees: ["inventada"]` (ActionRequest y capacidad) | accept/ok | reject/invalid_value |
+| `command_absolute: "rel/no/abs"` | accept/ok | reject/invalid_value |
+| `cwd: "tmp"` | accept/ok | reject/invalid_value |
+| `action_id: ""` | accept/ok | reject/invalid_value |
+| `capability_envelope: 12345` | accept/ok | reject/invalid_type |
+| `capability_envelope: {"x":1}` | accept/ok | reject/unknown_field |
+| `invocation_proof: "cadena"` | accept/ok | reject/invalid_type |
+
+Causa: `ektel_ref_parser.py:264-265` declara `capability_envelope` e `invocation_proof` como `("any", None)` — un sobre entero queda sin validar dentro de `ActionRequest`, contra §5.1 («campos desconocidos», «tipos coercionados»); y `GUARANTEES_ENUM` se define en la línea 204 y **nunca se usa** (`grep -n GUARANTEES_ENUM` → una sola ocurrencia), dejando el vocabulario cerrado de garantías sin aplicar en el único parser hand-coded.
+
+**3. El parser B acepta un salto de línea final en todo campo con `pattern`.** `ektel_cleanroom_parser.py:181` usa `re.search(schema["pattern"], value)`; en Python `$` casa también antes de un `\n` final. Probado: `nonce` = 32 hex + `"\n"` → **A rechaza (`invalid_value`), B acepta (`ok`)**, tanto en `ActionRequest` como en el payload de capacidad firmado. Afecta a `nonce`, `identity_digest`, `payload_digest`, `mac`, `stdin_policy.sha256`, `handle_ref`. Es una relajación de §5.1 y, en `invocation-proof`, un hueco de superficie de ataque (el `bytes.fromhex` posterior toleraría el sufijo). Corrección: `re.fullmatch`.
+
+*(Los hallazgos 2 y 3 son también el resultado material del contraste clean-room: los 31 vectores no cubren ninguna de las nueve divergencias, todas en el subconjunto no firmado o en el payload ya autenticado.)*
+
+### Menores
+
+**4. §5.5 no se aplica al protected header en el parser B.** `schema_version: 2` dentro del header autenticado → A: `schema_version_unsupported` (correcto), B: `invalid_value`. `schema_version_diag()` sólo se invoca sobre el payload (`ektel_cleanroom_parser.py:263`), no sobre el header. El vector `cap-invalid-version` coloca la versión mayor en el *payload*, por lo que no cubre el caso. Igual divergencia con `schema_version: true` (bool): A `schema_version_unsupported`, B `invalid_value` — y aquí el correcto es B, porque §5.1 lo clasifica como coerción de tipo, no como versión desconocida; `ektel_ref_parser.py:373` evalúa `header["schema_version"] != 1` antes de `_is_int`, y `True != 1` es falso en Python.
+
+**5. `cause_code` es un vocabulario cerrado sin respaldo normativo.** Los cinco valores (`natural_exit`, `deadline_duration`, `deadline_validity_exhausted`, `external_termination`, `supervision_failure`) no aparecen en la spec: §7.2 sólo menciona «`cause_code` cerrado de vigencia agotada» y propuesta §7.5 lista `cause_code` como campo sin enumerarlo. A diferencia del hallazgo 1 no contradice a la norma, pero un enum cerrado que se congela en M0 necesita asiento en §8.3 o declaración explícita de que se fija en M0.
+
+**6. «Límites de tamaño declarados por tipo» (§5.1) no existen en la norma.** Ambos parsers aplican un único techo global de 65536 B (`MAX_WIRE_BYTES`, `SIZE_LIMIT`) para todos los wire types. `grep` sobre la spec no encuentra ningún límite por tipo declarado. Es simultáneamente regla inventada (la constante) y norma ausente (la tabla de límites).
+
+**7. Vocabulario de diagnósticos inconsistente entre los dos parsers.** `ektel_ref_parser.py:81` devuelve `size_exceeded`, pero el docstring que enumera el «vocabulario cerrado de parser, M0» (líneas 16-19) lo omite; el parser B sí lo incluye. Un vocabulario cerrado no puede tener dos definiciones.
+
+**8. La construcción de los tokens de admisión y terminación no es la que describe §6.** §6.8 especifica el token de terminación como «MAC con dominio `ektel/termination/v1` sobre `action_id || identity_digest`» y §6.4 exige «codificación por longitudes (nunca concatenación ambigua)»; lo implementado es un sobre estilo JWS sobre `ph_b64 || "." || pl_b64` con payload `{action_id, identity_digest, schema_version}` (verificado en `term-valid-01`). Lo mismo con §6.6 para `admitted_action` («`identity_digest` + MAC interno de admisión + expiry»). La implementación es *mejor* que la letra (elimina la ambigüedad de concatenación que §6.4 teme) pero no es la letra: exige enmienda de redacción de §6.6/§6.8 antes de congelar, o el contrato y la norma quedan citándose mutuamente en falso.
+
+### Notas
+
+**9.** Los entrypoints `__main__` de ambos parsers hacen `b64decode(doc["bytes"])` sin re-padding, pero los vectores almacenan base64 **sin** padding (el test sí lo repadea, `tests/contract/test_golden_vectors.py:55`). Ejecutar cualquiera de los dos parsers como documenta su propio docstring falla con `binascii.Error: Incorrect padding` — reproducido. Además cada vector declara `"encoding": "base64"` cuando en realidad es base64 sin padding.
+
+**10.** `exp < nbf` con MAC válida se acepta en ambos parsers. Es correcto para M0 (la vigencia es §7/admisión, no wire format), pero conviene un vector que fije la decisión explícitamente en lugar de dejarla como silencio.
+
+**11.** Sin retracciones: los once hallazgos son reproducibles sobre `main@33da6f8` con los comandos de esta ronda. Snapshot: 2026-08-20.

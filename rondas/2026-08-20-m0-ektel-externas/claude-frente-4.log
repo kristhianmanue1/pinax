@@ -1,0 +1,111 @@
+## Frente 4 — Independencia clean-room (R5), main@33da6f8
+
+**Resultado del contraste.** Los 31 vectores dorados dan veredicto y diagnóstico idénticos en A y B (0 discrepancias). Pero un fuzz diferencial de 1191 mutaciones derivadas de los vectores válidos produce **307 divergencias (25,8 %)**, de las cuales **79 son divergencias de veredicto** (A acepta lo que B rechaza). Conclusión doble: la independencia **no es ilusoria** (las implementaciones difieren de verdad), pero **los 31 vectores no tienen poder discriminante**: no distinguen a los dos parsers en ningún punto, y hay 5 errores de interpretación *compartidos*.
+
+Reproducción: `/tmp/fuzz.py` y `/tmp/shared.py` (escritos en esta sesión; usan `test_key_hex` de `contracts/vectors/v1/index.json`).
+
+---
+
+### A. Errores de interpretación COMPARTIDOS (independencia ilusoria aquí)
+
+**1 — Bloqueante. Maleabilidad de firma: base64url no canónico aceptado por ambos.**
+Un `signature` de 43 caracteres codifica 258 bits para 32 bytes → 2 bits sobrantes. Ninguno de los dos exige canonicidad; ambos decodifican y comparan bytes.
+```
+capability-envelope: signature[-1] '4'→'5'  → A=accept/ok  B=accept/ok, mismo identity_digest a7ef9807…
+admission-token:     signature[-1] '8'→'9'  → A=accept/ok  B=accept/ok, mismo 855cfebd…
+termination-token:   signature[-1] 'w'→'x'  → A=accept/ok  B=accept/ok
+```
+Consecuencia: dos secuencias de bytes distintas producen el mismo `identity_digest`. Cualquier antirreplay o consumo-único que deduplique por hash de los bytes del wire (o por byte-igualdad del token) es evadible. Ni la spec ni los schemas lo prohíben (`envelope.schema.json` sólo fija el alfabeto y `{43}`). Requiere decisión normativa + vector.
+
+**2 — Bloqueante. `identity_digest` no es estable frente a re-codificación del payload.**
+Alterando los bits sobrantes de `payload_b64` y resellando el MAC, ambos aceptan y devuelven un digest **distinto** (`d32ff80c…` vs `855cfebd…`) para exactamente el mismo payload decodificado. La identidad de acción es una función del encoding, no del contenido. Compartido; ningún vector lo cubre.
+
+**3 — Menor. El discriminador `outcome` no restringe campos (ambos).**
+```
+{"schema_version":1,"outcome":"admitted","reason_code":"policy_denied","retryable":true} → A=accept  B=accept
+{"schema_version":1,"outcome":"started","reason_code":"start_failed"}                    → A=accept  B=accept
+{"schema_version":1,"outcome":"admitted"}  (sin identity_digest)                         → A=accept  B=accept
+```
+`admission-outcome.schema.json` describe «discriminador cerrado» pero no lo modela (falta `oneOf`/`if-then`), y ambos parsers heredan el hueco. El error es del schema, no de los parsers — por eso los dos coinciden.
+
+**4 — Menor. `stdin_policy: inline_b64` sin datos, y sin coherencia `sha256`↔`data_b64` (ambos).**
+```
+stdin_policy={"kind":"inline_b64"}                            → A=accept  B=accept
+stdin_policy={"kind":"inline_b64","data_b64":"AAAA","sha256":"0"*64}  → A=accept  B=accept
+```
+`required` es sólo `["kind"]`. Compartido.
+
+**5 — Nota. Ningún parser revincula `ActionRequest` con la capacidad embebida (ambos).**
+`command_absolute`/`cwd`/`deadline_ms`/`action_id` divergentes del `action_binding` del sobre, y un `capability_envelope` con firma basura, se aceptan en A y B. Es defendible como frontera parser/núcleo, pero conviene dejarlo escrito: **ningún vector distingue «parser válido» de «request vinculado»**, y el nombre `parse_wire` invita a la lectura equivocada.
+
+---
+
+### B. Divergencias latentes NO cubiertas por los 31 vectores
+
+**6 — Bloqueante. B (clean-room) acepta salto de línea final en todo campo con `pattern`.**
+`check()` usa `re.search(pattern, value)` y `B64U_RE.match`; en Python `$` casa **antes de un `\n` final**. Ningún patrón usa `\Z` ni `fullmatch`.
+```
+action-request   nonce = "a"*32 + "\n"        → A=reject/invalid_value   B=accept/ok
+invocation-proof payload_digest + "\n"        → A=reject/invalid_value   B=accept/ok
+start-outcome    handle_ref = "0"*16 + "\n"   → A=reject/invalid_value   B=accept/ok
+```
+Afecta a `nonce`, `key_id`, `identity_digest`, `payload_digest`, `mac`, `handle_ref`, `stdin_policy.sha256`. Falla real de B: inyección de bytes no previstos en identificadores y digests. Arreglo: `re.fullmatch` (`contracts/parsers/clean-room/ektel_cleanroom_parser.py:186`) y `B64U_RE` con `\Z`.
+
+**7 — Bloqueante. A (referencia) no valida `capability_envelope` ni `invocation_proof` del ActionRequest.**
+Están declarados `("any", None)` (`ektel_ref_parser.py:230`), mientras el schema los define con `$ref`. 33 mutaciones divergen:
+```
+capability_envelope = "x" | 42 | null | [] | {}   → A=accept/ok   B=reject/invalid_type|missing_field
+invocation_proof    = 42 | null | ...             → A=accept/ok   B=reject/invalid_type
+```
+Igual con `execution-result.measurements` (`("any", None)` vs `object/additionalProperties:{integer}`). Un ActionRequest sin capacidad estructural alguna pasa la referencia.
+
+**8 — Bloqueante. A ignora `minLength`, `pattern` y `minimum` de los schemas (44 divergencias de veredicto).**
+El kind `str` de A sólo mira longitud máxima; `("int", None)` no aplica cota inferior. Además `GUARANTEES_ENUM` está definido pero **nunca se usa**.
+```
+action-request  action_id=""                         → A=accept  B=reject/invalid_value   (minLength 1)
+action-request  command_absolute="rm -rf"            → A=accept  B=reject/invalid_value   (pattern ^/)
+action-request  cwd="relative/path"                  → A=accept  B=reject/invalid_value
+action-request  requested_guarantees=["root"]        → A=accept  B=reject/invalid_value   (enum de items)
+capability-env  payload.nbf=-1 / payload.exp=-1      → A=accept  B=reject/invalid_value   (minimum 0)
+execution-result started_at_wall=-1, discarded_bytes=-1 → A=accept  B=reject/invalid_value
+admission-token payload.issuer_id="" , payload.exp=-1  → A=accept  B=reject/invalid_value
+```
+Ruta de ataque concreta: una capacidad con `command_absolute` relativo o `exp` negativo es admitida por la referencia.
+
+**9 — Menor. `schema_version` booleano: `True` pasa el test `!= 1` en A.**
+`ektel_ref_parser.py:414` (`if diag=="invalid_value" and payload.get("schema_version") not in (None,1)` — `True in (None,1)` es cierto) y `:340`.
+```
+cualquier tipo, schema_version=true  → A=accept/ok   B=reject/invalid_value
+```
+Es la única fuga de coerción bool→int que sobrevive en A, precisamente la que §5.1 prohíbe.
+
+**10 — Menor. Orden de precedencia de diagnósticos invertido entre A y B (90 casos).**
+B evalúa `schema_version_diag()` **antes** del schema; A lo deriva *a posteriori* de un `invalid_value`.
+```
+sv=2 + campo desconocido      → A=unknown_field              B=schema_version_unsupported   (9 tipos)
+schema_version="" | 1.5 | {}  → A=schema_version_unsupported  B=invalid_value                (76 casos)
+invocation-proof sv=-1 | 10^19 → A=invalid_value              B=schema_version_unsupported
+```
+Si §5.5 fija un orden de precedencia, uno de los dos lo incumple; si no lo fija, la spec tiene un hueco. Ningún vector combina dos causas de rechazo — es el agujero más sistemático del corpus.
+
+**11 — Menor. Diagnóstico de campos de sobre mal tipados y de firma mal dimensionada (51 casos).**
+```
+signature = 7 | null | true | []      → A=bad_base64      B=invalid_type    (kind "b64u" de A no comprueba str antes)
+signature = "" | 42 chars | 44 chars  → A=bad_signature   B=invalid_value   (pattern {43} de B)
+protected_header_b64 = ""             → A=bad_signature   B=invalid_value   (pattern + de B)
+```
+
+**12 — Menor. Límites de cardinalidad: `invalid_type` (A) vs `invalid_value` (B).**
+```
+args con 300 elementos / env_allowlist_values con 100 claves / requested_guarantees 300 → A=invalid_type  B=invalid_value
+```
+A codifica `maxItems`/`maxProperties` dentro del chequeo de tipo (`_check_kind`, ramas `array_str`/`map_str`).
+
+**13 — Nota. `size_exceeded` no está en el vocabulario cerrado declarado por A.**
+Ambos lo devuelven (`>65536 bytes`, verificado), y el docstring de B lo lista; el de A (`ektel_ref_parser.py:19-22`) no. Discrepancia documental sobre un vocabulario declarado cerrado.
+
+---
+
+### Veredicto sobre R5
+
+La prueba de implementación independiente **está construida correctamente** (parser hand-coded vs table-driven sobre schemas; B carga los schemas en runtime, A los transcribe a mano — las divergencias 7/8/10 demuestran que las transcripciones se hicieron por separado). Lo que **no** sostiene el criterio es el corpus: **31 vectores que ninguno de los dos parsers falla no prueban acuerdo, sólo cubren el camino feliz y un rechazo por categoría.** Con 79 desacuerdos de veredicto alcanzables por mutación de un solo campo de los propios vectores válidos, el corpus debe crecer antes de declarar M0 cerrado. Prioridad: hallazgos 1, 2, 6, 7, 8 (bloqueantes), y una decisión normativa explícita sobre 10 (precedencia de diagnósticos).

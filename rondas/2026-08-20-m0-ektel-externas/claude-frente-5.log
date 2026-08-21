@@ -1,0 +1,38 @@
+# Frente 5 — Vocabularios cerrados (M0 @ 33da6f8)
+
+## Conformes (verificado)
+
+- **`budget_exceeded` ausente de todo enum.** `grep -rn budget_exceeded contracts/schemas/` sólo lo halla en la *descripción* de `execution-result.schema.json:5` y como vector negativo (`contracts/vectors/v1/outcomes.vectors.json:31`). ✔
+- **Estados de ejecución = exactamente 4.** `execution-result.schema.json:16` = `executed, deadline_exceeded, terminated, supervision_failed` ≡ spec §8.3 (l. 277). Ni de más ni de menos. ✔
+- **Clases de garantía = exactamente 4.** `enforced, reactive, observed, unsupported` en `admission-outcome.schema.json:23` y `execution-result.schema.json:45` ≡ spec §9 (l. 305) / propuesta §8. ✔
+- **`TerminationOutcome`.** `termination-outcome.schema.json:13` = `["capability_rejected"]`, código único ≡ §8.3 l. 287-288. ✔
+
+## Hallazgos
+
+**1 · BLOQUEANTE — `AdmissionRejected` tiene 3 códigos de más para la causa "capacidad".**
+`contracts/schemas/v1/admission-outcome.schema.json:33-38` declara `capability_invalid`, `capability_expired`, `capability_reused` **y** `capability_rejected`. La spec §8.3 (l. 282-285) colapsa las tres subcausas en un solo código:
+
+> «capacidad inválida/expirada/reutilizada **con `reason_code` `capability_rejected`**»
+
+El esquema convierte una subsunción normativa explícita en cuatro códigos distinguibles. Además es un oráculo para el llamador (invalidez vs. expiración vs. replay), en tensión con §8.2 l. 268-269 sobre no filtrar en el canal de rechazo. Ninguna acta ni ADR autoriza la desagregación: ADR-005 sólo dice «`reason_code` cerrado propio» (l. 81) sin enumerar.
+*Resolución:* dejar `capability_rejected` como único código de esa causa, o enmendar §8.3 antes de congelar el wire v1. No es cosmético: cambia el vocabulario cerrado versionado.
+
+**2 · NOTA — `guarantee_unsupported` no aparece en la lista de causas de §8.3.**
+`admission-outcome.schema.json:37`. Tiene respaldo normativo real (propuesta §8, regla 2, adoptada por §9 l. 305-310: «Solicitar una garantía obligatoria no disponible rechaza la admisión»), pero §8.3 enumera sólo cuatro causas —descriptor, capacidad, política, auditoría— y omite ésta. El esquema está bien; la spec está incompleta.
+*Resolución:* enmendar §8.3 para incluir la causa de garantía.
+
+**3 · NOTA — `capability_rejected` en `StartFailed` contradice literalmente §8.3.**
+`start-outcome.schema.json:13-14` incluye `capability_rejected`, mientras §8.3 (l. 285-287) afirma que «`start_failed` y `start_failed_indeterminate` … **son** los códigos de `StartFailed`». El esquema sigue correctamente §7.4 l. 207 («el perdedor de un `start` concurrente recibe `capability_rejected` con código cerrado»). Es un conflicto interno de la spec, no del esquema.
+*Resolución:* enmendar §8.3 para reconocer el tercer código.
+
+**4 · MENOR — `cause_code` es vocabulario cerrado sin enumeración normativa.**
+`execution-result.schema.json:22-26`: `natural_exit, deadline_duration, deadline_validity_exhausted, external_termination, supervision_failure`. La spec sólo lo nombra en prosa: C6 (§8.3 l. 293-299) describe cuatro causas y §7 l. 195-197 exige «`cause_code` cerrado de vigencia agotada». Los cinco valores son defendibles uno a uno, pero **la lista cerrada nace en el esquema**, no en la spec adoptada — justo lo que §8.3 exige que sea «cerrado y versionado» a nivel normativo.
+*Resolución:* fijar la lista en §8.3 (o en ADR-005) para que el esquema la refleje, no la defina.
+
+**5 · MENOR — enums de `ActionRequest` sin origen normativo.**
+`action-request.schema.json:31` (`stdin_policy.kind` = `empty|inline_b64`), `:40` (`repair_policy` = `none`), `:52` y `capability-payload.schema.json:51` (`requested_guarantees` = `runtime_supervision|output_bounds|audit_trail`). Spec §8.1 (l. 249-255) y propuesta §7.2 (l. 234, 239) **sólo listan los nombres de campo**; los valores admisibles no están enumerados en ningún documento adoptado. `grep -rn "runtime_supervision\|inline_b64\|output_bounds" docs/` → 0 aciertos.
+*Resolución:* elevar estas tres listas a la spec, o marcarlas explícitamente como abiertas en v1.
+
+---
+
+**Resumen:** la exclusión de `budget_exceeded`, los 4 estados post-inicio y las 4 clases de garantía están exactos. Un bloqueante real (#1, códigos de capacidad de más contra texto explícito de §8.3) y cuatro casos de vocabulario cerrado cuya autoridad vive en el esquema y no en la spec (#2–#5), tres de ellos resolubles enmendando §8.3.
