@@ -1,79 +1,97 @@
-# REANUDAR — sesión 2026-08-20 (documento temporal de contexto)
+# REANUDAR — Pinax (actualizado 2026-08-20 ~20:45, cierre por límite de tokens)
 
-**Para:** el agente de Pinax (o cualquier agente de aria) que abra la
-próxima sesión. Léelo completo: es corto. Después ejecuta el protocolo de
-arranque de `/Users/krisnova/www/pinax/docs/guia-an-kla-pinax.md`.
+## Quién eres
 
-## Qué pasó hoy (2026-08-20)
+Eres **Pinax** (Kimi/kimi-k2), catálogo y orquestador del ecosistema aria.
+Directorio: `/Users/krisnova/www/pinax`. Lee `AGENTS.md` primero (reglas del
+proyecto) y `docs/guia-an-kla-pinax.md` cuando vayas a tocar memoria AN-KLA
+(flujo dominado, con lecciones aprendidas en vivo).
 
-1. **Visión de ecosistema** sobre skopos (memoria de agentes) y ektel
-   (preparación para M0). Mi v1 tenía 2 BLOCKER factuales; los encontré en
-   autocritica; Codex CLI y Claude CLI hicieron rondas adversariales
-   independientes con autocrítica propia obligatoria y firma asentada.
-2. **Documento final firmado por tres modelos:**
-   `/Users/krisnova/www/pinax/rondas/2026-08-20-vision-skopos-ektel/vision-final-firmada.md`
-   (incorpora X-1, X-2 de Codex e Y-1..Y-7 de Claude).
-3. **Decisión del dueño:** skopos será **multi-CLI** (Claude Code, Kimi
-   CLI, Qwen CLI…); P-001 (integración AN-KLA) queda **superada** — su
-   única justificación era cobertura y se resuelve con parsers propios.
-4. **Encargos emitidos** a agentes de skopos y ektel: prosa
-   (`instruccion-agente-*.md`) + contratos `task-card/v1` **validados
-   con epistates** (`task-card-*.json`, ambos VALID). Están trabajando.
-5. **AN-KLA inicializado en pinax** (tag beta.15, `.an-kla/` local
-   gitignored). Primer episodio escrito por flujo gobernado.
-6. **Adopciones como orquestador:** skevi (método), an-kla (memoria),
-   epistates (encargos), argos (evidencia de rondas, pendiente de uso),
-   escrubery (verdad versionada de CLIs). Disciplina: proteinomenos
-   (rondas), praxis-dev (gobernanza, primer adoptante).
-7. Commit del ciclo en pinax: `54c1109`. Sin push (requiere autorización).
+## Protocolo de arranque (obligatorio)
 
-## Estado de los frentes abiertos
+```bash
+cd /Users/krisnova/www/pinax
+.venv/bin/python -m an_kla --project-root . context status   # diagnostics == []
+.venv/bin/python -m an_kla --project-root . verify           # si falla: NO operar
+.venv/bin/python -m an_kla --project-root . checkpoint show  # working state completo
+```
 
-| Frente | Estado | Próximo acto | De quién |
-|---|---|---|---|
-| skopos | Agente trabajando con encargo (C-9→C-8→C-10→C-6→C-5, luego escrubery REQ-10 y parser multi-CLI) | Recibir reporte con evidencia rag/v1; decisiones 🔒 pendientes del dueño (C-8 mutación vs retención, política de arranque, C-6) | dueño decide, agente ejecuta |
-| ektel | Agente trabajando: borradores de acta de consenso v1.2 + acta de autorización M0, corrección README conservando no-claim, corrida Linux de las 8 pruebas | **Consenso del dueño sobre v1.2** → autorización de M0. Es el cuello de botella del ecosistema: sin ektel no hay garantía `enforced` de nada | dueño |
-| pinax | Memoria propia + política + guía escritas hoy | Cosechar `project-manifest.yaml` de skopos y ektel cuando reporten; generar `/Users/krisnova/www/aria/AGENTS.md` índice del ecosistema (propuesto, no autorizado aún) | pinax con autorización |
-| claude CLI | No lee su sesión del llavero desde shells no interactivos | Workaround probado y funcionando: `CLAUDE_CODE_OAUTH_TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w \| python3 -c "import sys,json;print(json.load(sys.stdin)['claudeAiOauth']['accessToken'])")` | quien lo invoque |
+Memoria: AN-KLA beta.16 instalada (0.1.0b16); checkpoint ligado a Git
+(`git/v1`); 18+ eventos del día asentados. Escritura SIEMPRE vía
+`plan-write` → `commit-write-plan` (guía tiene las claves exactas y trampas).
 
-## Herramientas del ecosistema y cómo descubrirlas (regla 3 propuesta)
+## Estado del ecosistema (snapshot 2026-08-20 ~20:45)
 
-Antes de usar una herramienta de aria, corre su comando de descubrimiento:
+### skopos — `/Users/krisnova/www/aria/skopos`
+- Ciclo de 7 fases: **0,1,2,3(a),4,6 cerradas**; rondas 0–8 con actas;
+  102/102 verde. Decisiones firmadas: C-9, C-8 (ADR-007 B), C-10 (ADR-008:
+  watch desde-ahora + --backfill), C-6 (ADR-009: P4a sello fragmento-only +
+  P5 presupuesto + P3 marca no-instrucción).
+- **EN CURSO: Fase 5 (C-5)** — piloto sesión única acotada + detector de eco.
+  Timeout del piloto: **300 s vía parámetro existente + fallos como dato**
+  (decisión del dueño). Restricción Pinax: ya honrada (sello antes de ingesta).
+- Después: **Fase 7** — contrato de parser por CLI (abre multi-CLI: claude,
+  kimi, qwen...). Gated tras Fases 1–6.
+- Cuando entregue el reporte del piloto: revisión de cierre de Pinax y
+  actualizar MAPA.md del ecosistema (ofrecido al dueño).
 
-| Herramienta | Descubrimiento | Qué es |
-|---|---|---|
-| an-kla-memory | `.venv/bin/python -m an_kla capabilities` | memoria gobernada por proyecto |
-| epistates | `.venv/bin/python -m epistates describe` | contratos task-card + validador |
-| escrubery | `~/www/aria/escrubery/scripts/consultar listar` | inteligencia de CLIs/modelos con procedencia |
-| skevi | `docs/ai-agent-guide/00-INDICE.md` | método F0→F3 de construcción |
-| argos | README (sin CLI estable aún) | análisis con evidencia L0–L5, claims content-addressed |
-| praxis-dev | `docs/estandar.md` (draft) | gobernanza ejecutable |
+### ektel — `/Users/krisnova/www/aria/ektel`
+- **M0 NO cerrado.** Rondas externas (Codex+Claude, lanzadas por Pinax):
+  NO-GO doble. Logs y síntesis: `pinax/rondas/2026-08-20-m0-ektel-externas/`.
+- **ADR-010 firmado (alternativa a)**: rechazar base64url no canónico (bits
+  residuales en cero, verificado re-codificando). H1/H2 reproducidos por Pinax.
+- **EN CURSO**: paquete de correcciones (parsers A/B, schemas oneOf,
+  vocabulario admisión, enmiendas spec §8.3/§6.6/§6.8/§5.5/§5.1, corpus
+  ampliado). Instrucción completa: `instruccion-agente-ektel-correccion-m0.md`.
+- **Gate de salida**: ronda propia + re-verificación externa con Codex Y
+  Claude sobre el diff. **Pinax las lanza** (flujo ya probado; ver abajo).
 
-Guías de notas aprendidas (leer antes de depurar):
-`/Users/krisnova/www/aria/escrubery/docs/an-kla-guia.md` y
-`/Users/krisnova/www/pinax/docs/guia-an-kla-pinax.md`.
+### an-kla — `/Users/krisnova/www/an-kla-memory`
+- #67 cerrado como límite documentado; #45 mergeado (PR #90).
+- **EN CURSO: #68 (inventario)** en rama `feat/issue-68-inventario` — fixes
+  H1 (catálogo-primero) + H2 (**decisión: bucket `eliminada` en schema+counts,
+  invariante intacta**) + H3 → re-ronda → PR → release **beta.17**.
+- Al publicar beta.17: avisan a pinax → actualizar .venv de pinax (con gate
+  de upgrade beta.16→17 como evidencia). Será la primera prueba real de #45
+  con el AGENTS.md de pinax.
+- Después (sin prisa): #46 (export sellado, decisión B vs D), G2–G4.
 
-## Lecciones de método (no negociables, vienen de errores reales de hoy)
+### agora — `/Users/krisnova/www/aria/agora`
+- Decisión del dueño: **fundación simple, sin CAGF ni ektel**.
+- Encargo LISTO pero **NO ENVIADO** (diferido por el dueño): archivos en
+  `pinax/rondas/2026-08-20-vision-skopos-ektel/` — `instruccion-agente-agora.md`
+  + `task-card-agora.json` (VALID, epistates; ojo: catálogo check_id cerrado:
+  git_status/diff_check/unit_tests). Esperando orden del dueño para enviar.
 
-1. Afirmación de estado ⇒ verificar contra git/código/evidencia, nunca
-   README solo.
-2. Verificación citada ⇒ declarar si el verificador es quien firma.
-3. Antes de depurar una herramienta, buscar la guía de notas de otro
-   proyecto (mi fallo `authority_scope_mismatch` ya estaba resuelto en
-   escrubery).
-4. Métricas siempre fechadas como snapshot.
-5. "Nadie obliga" es falso a medias: la obligación estructural existe —
-   DoD ejecutable, gates con exit code, propongo/aplico, evidencia como
-   condición de aceptación. Lo que no existe aún es contención de
-   ejecución: eso es ektel.
+### propylon / proteinomenos (analizados, sin acción)
+- propylon: solo README. NO construir hasta que ektel tenga tráfico real.
+  Su manifiesto futuro debe declarar `no_ofrece` (no es parada completa).
+- proteinomenos: paper anti-confirmación; única acción legítima pendiente =
+  **escribir el prerregistro de Fase −1**. Su CapabilityMap futuro debe LEER
+  de pinax, no construirse aparte.
 
-## Estado de este documento
+## Cómo lanzar rondas externas (Codex/Claude) — dominado hoy
 
-Temporal: su contenido durable vive en la memoria AN-KLA de pinax
-(episodios `episodio-rondas-vision-2026-08-20` y
-`episodio-tooling-pinax-2026-08-20` + checkpoint de cierre) y en los
-commits. El análisis de **qué herramienta debe garantizar cada pieza de
-este documento** (y cuándo puede borrarse) está en
-`docs/analisis-garantias-2026-08-20.md` — léelo antes de replicar este
-patrón en otro proyecto. Cuando el mapa (MAPA.md) incluya estos estados y
-el manifiesto tenga campo `descubrimiento`, este archivo puede borrarse.
+- Codex: `cd <repo> && codex exec --sandbox read-only "<prompt>"` — una
+  corrida completa cabe en 300 s si el prompt pide una sola respuesta.
+- Claude: `claude -p "<prompt>"` — **bufferiza y se muere a los 300 s** si la
+  tarea es grande: trocear por frentes (probado: 1-2, 4, 5 por separado).
+- Auth claude: el token OAuth expira; si dice "Not logged in",
+  `security find-generic-password -s "Claude Code-credentials" -w >
+  ~/.claude/.credentials.json && chmod 600` lo revive (hecho hoy).
+- Verificación de hallazgos: Pinax SIEMPRE reproduce los bloqueantes con sus
+  propias manos (python3 contra los parsers) antes de aceptarlos.
+
+## Método Pinax (lo que hice todo el día)
+
+1. Verificar contra código/git/tests, nunca contra README o reporte solo.
+2. Toda métrica fechada como snapshot.
+3. Decisión primero, código después; ronda adversarial pre y post.
+4. Commits/push/instalaciones: autorización del dueño POR OPERACIÓN.
+5. Todo evento relevante se asienta en AN-KLA (trazabilidad del día completa).
+6. Respuestas al dueño en español, con texto listo para pegar a cada agente.
+
+## Commits propios de hoy en pinax
+
+`6645100` (guía AN-KLA lecciones 5-6), `87e1cd1` (guía beta.16 + encargo
+agora). Pendiente de commit si procede: este REANUDAR.md actualizado.
