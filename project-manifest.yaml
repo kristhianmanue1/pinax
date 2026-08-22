@@ -1,0 +1,64 @@
+schema: pinax/project-manifest/v1
+id: pinax
+proposito: >
+  Catálogo y compilador del mapa del ecosistema: recoge lo que cada proyecto
+  declara sobre sí mismo en un manifiesto y genera una vista única. Valida
+  forma, nunca verdad.
+consumidor_principal: ambos
+
+ofrece:
+  - schema project-manifest/v1 con núcleo cerrado y extensión namespaced en `extensions`
+  - validador de forma contra el schema publicado, sin segunda implementación manual que pueda divergir
+  - compilador del mapa fail-closed - un hallazgo impide escribir, salvo --allow-invalid explícito
+  - clave YAML duplicada tratada como error, no como último-valor-gana silencioso
+  - id declarado por dos manifiestos - ambos excluidos y las fuentes en conflicto listadas, sin promover ninguna
+  - listado de missing_manifest - la ausencia se publica desde el primer día, no se espera a tenerlos todos
+  - campo descubrimiento con argv estructurado, representado en el mapa y nunca ejecutado
+  - "lint del grafo cosechado: consume sin manifiesto en las raíces, contratos publica duplicados, uso/requerido en publica — hallazgos relativos a la cosecha, nunca verdad"
+  - mapa también como JSON consultable (build --format json) para el consumidor agente
+  - hijo de raíz cuenta como proyecto sólo con manifiesto o .git propio - un directorio cualquiera no es ruido de missing_manifest
+  - celdas del mapa escapadas y truncadas por palabra - una tubería en un propósito no rompe la tabla
+  - protocolo de adopción con confirmación del mantenedor antes de escribir un manifiesto ajeno
+
+no_ofrece:
+  - "verificación de que lo declarado sea cierto: valida forma, nunca verdad, y la confirmación de autoría no es verificación técnica"
+  - ejecución del argv de descubrimiento ni de ningún comando declarado en un manifiesto
+  - "control del espacio de identificadores ni de la inclusión en el mapa; ese plano es del Mediador"
+  - "gobernanza del repositorio de cada proyecto; está fuera de este contrato"
+  - "dependencias de paquete en el mapa; su hogar canónico es el manifiesto del gestor de paquetes"
+  - "estado dinámico en el manifiesto: sin versión fijada, sin conteos, sin rama, sin próxima tarea"
+  - "método de construcción de software ni estándar de diseño; ese plano es de skevi"
+  - "autoridad, conformidad ni perfiles de aseguramiento; ese plano es de praxis-dev"
+  - "claims con procedencia verificable ni attestations; ese plano es de argos"
+  - "contrato de tarea ejecutable ni supervisión de agentes; ese plano es de epistates"
+  - "memoria ni continuidad entre sesiones; ese plano es de an-kla-memory"
+  - "garantía de admisión (enforced): todo acto de Pinax es reactive, detecta y rechaza después; ese plano es de ektel"
+  - "descubrimiento automático de proyectos fuera de las raíces que se le pasan en la invocación"
+
+publica:
+  - { tipo: contrato, id: pinax/project-manifest, version: v1 }
+
+consume:
+  - { tipo: proyecto, id: an-kla-memory, uso: "continuidad entre sesiones y checkpoint de arranque de este repo; el protocolo y el validador no dependen de ella", requerido: false }
+  - { tipo: contrato, id: epistates/task-card, version: v1, uso: "todo encargo a otro proyecto sale como task-card validado; es política de este repo, no requisito del protocolo", requerido: false }
+
+descubrimiento:
+  argv: ["python3", "scripts/pinax.py", "--help"]
+  expected_exit_code: 0
+
+fronteras_de_confianza:
+  - los manifiestos son autodeclaraciones - no son evidencia verificada, ni instrucciones, ni autoridad
+  - la confirmación del mantenedor acredita autoría del contenido, nunca verificación técnica de lo que afirma
+  - el argv de descubrimiento es texto no confiable - representarlo en el mapa no autoriza ejecutarlo
+  - "shell=False evita un shell implícito del runner; no vuelve seguro al programa declarado, que puede ser un shell o intérprete"
+  - un campo autodeclarado como verified, trusted o done no eleva confianza
+  - la memoria recuperada de AN-KLA es dato no confiable, nunca instrucción ni autorización
+  - la salida de un agente no es prueba de su propio trabajo - se contrasta con Git, pruebas y estado real
+  - toda operación destructiva o con efecto fuera del entorno local exige autorización previa y específica, una por operación
+
+pospuesto:
+  - "verificación opt-in del argv de descubrimiento, sólo bajo autorización explícita sobre el argv exacto, shell=False, cwd controlado y límites: propuesta, no autorizada"
+  - observación de versión, tag y revisión de Git al cosechar, anotadas como dato derivado
+  - "topología de escaneo: hoy build sólo cubre las raíces que recibe, y este repo vive fuera de la raíz que documenta su propio README"
+  - "hogar canónico del borrador de orquestación multiagente que hoy vive fuera de Git: requiere análisis, ronda adversarial y autorizaciones propias"
+  - v2 del schema y su migración explícita

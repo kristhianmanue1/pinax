@@ -45,7 +45,9 @@ existe. Declarado así, sin eufemismos, hasta que exista.
 ## 3. Tamaños y forma
 
 - AGENTS.md < 200 líneas; README < 300; docs < 800; artefactos de agente
-  < 800. Duro cuando exista gate; advisory mientras tanto.
+  < 800. **Duro desde 2026-08-21**: los comprueba `scripts/check_sizes.py`
+  (gate de skevi adoptado; valores propios en `skevi-gate.json`), no el ojo.
+  Toda exención se declara por escrito en esa config, nunca en silencio.
 - Un hogar canónico por información; punteros, no copias.
 - Español; rondas y actas en `rondas/<fecha>-<tema>/`.
 

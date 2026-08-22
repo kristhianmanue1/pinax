@@ -1,0 +1,21 @@
+{
+  "required": [
+    "AGENTS.md",
+    "README.md",
+    "AN-KLA.md",
+    "project-manifest.yaml",
+    "schemas/project-manifest-v1.schema.json",
+    "scripts/pinax.py",
+    "scripts/check_sizes.py",
+    "scripts/check_plans.py",
+    "tests/test_pinax.py",
+    "docs/politica-agentes-pinax.md",
+    "docs/guia-an-kla-pinax.md"
+  ],
+  "root_markdown": ["AN-KLA.md", "MAPA.md"],
+  "exempt_paths": [
+    "MAPA.md",
+    "rondas/2026-08-20-m0-ektel-externas/codex-raw.log"
+  ],
+  "skip_dirs": ["orquetacionMultiagenteTemporal"]
+}

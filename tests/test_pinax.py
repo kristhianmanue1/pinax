@@ -292,10 +292,36 @@ def test_build_marca_missing_manifest(tmp=None):
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
-        (root / "sin-manifiesto").mkdir()
+        p = root / "sin-manifiesto"
+        p.mkdir()
+        (p / ".git").mkdir()  # repo propio sin manifiesto: sí es un proyecto
         out = pinax.render(pinax.collect([root]))
         assert "missing_manifest" in out
         assert "sin-manifiesto" in out
+
+
+def test_directorio_sin_git_ni_manifiesto_no_es_proyecto():
+    # Un hijo que no trae manifiesto ni .git propio (docs/, src/, tests/ de un
+    # repo convencional) no es un proyecto: listarlo como missing_manifest
+    # sería ruido que devalúa la señal de adopción.
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for ruido in ("docs", "src", "tests"):
+            (root / ruido).mkdir()
+        result = pinax.collect([root])
+        assert result.faltan == [], result.faltan
+        assert "missing_manifest" not in pinax.render(result)
+
+
+def test_repo_git_sin_manifiesto_cuenta_como_missing():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "proyecto-real"; p.mkdir()
+        (p / ".git").mkdir()
+        result = pinax.collect([root])
+        assert result.faltan == ["proyecto-real"], result.faltan
 
 
 def test_build_reporta_manifiesto_invalido():
@@ -306,6 +332,189 @@ def test_build_reporta_manifiesto_invalido():
         (p / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
         out = pinax.render(pinax.collect([root]))
         assert "manifiestos inválidos" in out
+
+
+# --- lint: consistencia del grafo cosechado ---
+
+
+def _fila(**extra):
+    d = base() | extra
+    return d
+
+
+def test_lint_consume_proyecto_sin_manifiesto():
+    filas = [_fila(consume=[{"tipo": "proyecto", "id": "inexistente"}])]
+    h = pinax.lint_filas(filas)
+    assert any("consume proyecto `inexistente`" in x for x in h), h
+
+
+def test_lint_consume_proyecto_resuelto_no_halla():
+    filas = [
+        _fila(id="alfa"),
+        _fila(id="beta", consume=[{"tipo": "proyecto", "id": "alfa"}]),
+    ]
+    assert pinax.lint_filas(filas) == []
+
+
+def test_lint_consume_contrato_nadie_publica():
+    filas = [_fila(consume=[{"tipo": "contrato", "id": "nadie/x-v1"}])]
+    h = pinax.lint_filas(filas)
+    assert any("que ningún manifiesto cosechado publica" in x for x in h), h
+
+
+def test_lint_consume_contrato_resuelto_no_halla():
+    filas = [
+        _fila(id="alfa", publica=[{"tipo": "contrato", "id": "alfa/x-v1"}]),
+        _fila(id="beta", consume=[{"tipo": "contrato", "id": "alfa/x-v1"}]),
+    ]
+    assert pinax.lint_filas(filas) == []
+
+
+def test_lint_consume_externo_no_se_comprueba():
+    # Externo es externo por definición: no hay manifiesto que esperar.
+    filas = [_fila(consume=[{"tipo": "externo", "id": "tmux"}])]
+    assert pinax.lint_filas(filas) == []
+
+
+def test_lint_contrato_publicado_por_dos_proyectos():
+    filas = [
+        _fila(id="alfa", publica=[{"tipo": "contrato", "id": "x/v1"}]),
+        _fila(id="beta", publica=[{"tipo": "contrato", "id": "x/v1"}]),
+    ]
+    h = pinax.lint_filas(filas)
+    assert any("publicado por 2 proyectos" in x for x in h), h
+
+
+def test_lint_contrato_publicado_dos_veces_por_el_mismo():
+    filas = [
+        _fila(id="alfa",
+              publica=[{"tipo": "contrato", "id": "x/v1"},
+                       {"tipo": "contrato", "id": "x/v1"}]),
+    ]
+    h = pinax.lint_filas(filas)
+    assert any("2 veces" in x for x in h), h
+
+
+def test_lint_rechaza_uso_o_requerido_en_publica():
+    # La descripción del schema v1 reserva `uso` para consume; el schema no
+    # lo exige por retrocompatibilidad — lint lo hace visible sin romper v1.
+    filas = [
+        _fila(id="alfa",
+              publica=[{"tipo": "contrato", "id": "x/v1", "uso": "para algo"}]),
+    ]
+    h = pinax.lint_filas(filas)
+    assert any("reserva para consume" in x for x in h), h
+
+
+def test_main_lint_exit_cero_cuando_consistente():
+    # Un ecosistema mínimo que se resuelve a sí mismo: alfa publica lo que
+    # beta consume. (El fixture de argos solo consume `an-kla`, que no está
+    # en la cosecha — lint DEBE hallarlo; ese caso lo cubre el test con
+    # hallazgos.)
+    import contextlib, io, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        for pid, cuerpo in (
+            ("alfa", "publica:\n  - { tipo: contrato, id: alfa/x-v1 }\n"),
+            ("beta", "consume:\n  - { tipo: proyecto, id: alfa }\n"),
+        ):
+            p = root / pid; p.mkdir()
+            (p / pinax.MANIFEST_NAME).write_text(
+                f"schema: pinax/project-manifest/v1\nid: {pid}\n"
+                f"proposito: proposito suficientemente largo de {pid}\n{cuerpo}"
+            )
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = pinax.main(["lint", str(root)])
+        assert rc == 0, out.getvalue()
+        assert "OK" in out.getvalue()
+
+
+def test_main_lint_halla_consuma_dentro_de_fixture_solitario():
+    # El fixture de argos consume `an-kla`, ausente de una cosecha solitaria:
+    # hallazgo legítimo, relativo a las raíces cosechadas.
+    import contextlib, io
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        rc = pinax.main(["lint", str(FIXTURE)])
+    assert rc != 0
+    assert "an-kla" in out.getvalue()
+
+
+def test_main_lint_exit_no_cero_con_hallazgos():
+    import contextlib, io, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "solo"; p.mkdir()
+        (p / pinax.MANIFEST_NAME).write_text(
+            "schema: pinax/project-manifest/v1\nid: solo\n"
+            "proposito: proposito suficientemente largo\n"
+            "consume:\n  - { tipo: proyecto, id: fantasma }\n"
+        )
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = pinax.main(["lint", str(root)])
+        assert rc != 0
+        assert "fantasma" in out.getvalue()
+
+
+# --- build --format json ---
+
+
+def test_render_json_estructura_y_determinismo():
+    import json as _json
+    a = pinax.render_json(pinax.collect([FIXTURE]))
+    b = pinax.render_json(pinax.collect([FIXTURE]))
+    assert a == b
+    data = _json.loads(a)
+    assert data["schema"] == "pinax/mapa/v1"
+    assert any(p["id"] == "argos" for p in data["proyectos"])
+    assert "autodeclarado" in data["nota"]
+
+
+def test_render_json_incluye_faltan_y_hallazgos():
+    import json as _json, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        p = root / "repo-solo"; p.mkdir()
+        (p / ".git").mkdir()  # proyecto sin manifiesto -> missing
+        q = root / "malo"; q.mkdir()
+        (q / pinax.MANIFEST_NAME).write_text("schema: otro\nid: malo\nproposito: xxxxxxxxxx\n")
+        data = _json.loads(pinax.render_json(pinax.collect([root])))
+        assert data["missing_manifest"] == ["repo-solo"]
+        assert any("malo" in h for h in data["hallazgos"])
+
+
+def test_main_build_format_json_a_archivo():
+    import contextlib, io, json as _json, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        destino = Path(d) / "mapa.json"
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = pinax.main(["build", str(FIXTURE), "--format", "json",
+                             "--output", str(destino)])
+        assert rc == 0
+        assert _json.loads(destino.read_text())["schema"] == "pinax/mapa/v1"
+
+
+# --- render: celdas de tabla seguras ---
+
+
+def test_render_escapa_tuberia_en_proposito():
+    d = _fila(proposito="Un propósito con | tubería y \\ barra, largo suficiente.")
+    out = pinax.render(pinax.BuildResult([d], [], []))
+    assert "\\|" in out      # tubería escapada: la tabla no se rompe
+    assert "\\\\" in out     # barra escapada: no puede falsificar el escape
+
+
+def test_render_trunca_por_palabra():
+    import re
+    palabras = " ".join(f"palabra{i}" for i in range(40))
+    d = _fila(proposito=palabras)
+    fila = [ln for ln in pinax.render(pinax.BuildResult([d], [], [])).splitlines()
+            if ln.startswith("| **ejemplo**")][0]
+    celda = fila.split(" | ")[1]
+    assert celda.endswith("…")
+    assert re.search(r"palabra\d+…$", celda), celda  # termina en palabra completa
 
 
 if __name__ == "__main__":

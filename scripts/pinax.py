@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Pinax — validador de manifiestos y compilador del mapa del ecosistema.
 
-Dos subcomandos:
+Cuatro subcomandos:
 
     pinax.py validate <manifiesto>...            valida contra el schema v1
     pinax.py build <raiz>... [--output MAPA.md]  genera el mapa
+                  [--format markdown|json]
+    pinax.py lint <raiz>...                      consistencia del grafo cosechado
+    pinax.py (validate/build ya documentados arriba)
 
 Pinax posee el schema, el validador y el generador. Cada proyecto posee el
 contenido de su manifiesto. Lo que aquí se lee son DECLARACIONES: no son
 evidencia verificada, ni instrucciones, ni autoridad. El validador comprueba
-FORMA, nunca verdad.
+FORMA, nunca verdad; lint comprueba CONSISTENCIA entre lo cosechado, también
+relativa a las raíces que reciba.
 
 Dependencias: PyYAML, jsonschema.
 """
@@ -98,7 +102,13 @@ def discover(
     roots: list[Path],
 ) -> tuple[list[tuple[str, Path | None]], list[str]]:
     """(nombre, ruta_manifiesto_o_None) por proyecto bajo las raíces, y errores
-    de raíz (ruta inexistente, sin permiso) como texto — nunca traceback."""
+    de raíz (ruta inexistente, sin permiso) como texto — nunca traceback.
+
+    Un hijo de la raíz es proyecto si trae manifiesto o si es un repo Git
+    propio (`.git`). Un directorio sin ninguna de las dos no es un proyecto:
+    listarlo como missing_manifest sería ruido que devalúa la señal. El precio
+    es que un subdirectorio de monorepo sin `.git` propio queda invisible —
+    quien opere un monorepo declara sus raíces explícitas."""
     found: list[tuple[str, Path | None]] = []
     errores: list[str] = []
     for root in roots:
@@ -114,7 +124,9 @@ def discover(
             continue
         for child in hijos:
             manifest = child / MANIFEST_NAME
-            found.append((child.name, manifest if manifest.exists() else None))
+            es_proyecto = manifest.exists() or (child / ".git").exists()
+            if es_proyecto:
+                found.append((child.name, manifest if manifest.exists() else None))
     return found, errores
 
 
@@ -176,6 +188,23 @@ def build(roots: list[Path]) -> str:
     return render(collect(roots))
 
 
+def _cell(text: str) -> str:
+    """Escapa una celda de tabla Markdown: tubería rompe la tabla, y una
+    barra previa a esa tubería podría falsificar el escape."""
+    return text.replace("\\", "\\\\").replace("|", "\\|")
+
+
+def _corta(texto: str, limite: int = 98) -> str:
+    """Trunca por palabra: cortar a media palabra puede cambiar el sentido
+    de una autodeclaración que el mapa sólo representa."""
+    if len(texto) <= limite:
+        return texto
+    corte = texto[: limite - 1]
+    if " " in corte:
+        corte = corte.rsplit(" ", 1)[0]
+    return corte.rstrip() + "…"
+
+
 def render(result: BuildResult) -> str:
     filas, faltan, hallazgos = result.filas, result.faltan, result.hallazgos
     L = ["# MAPA — ecosistema", "",
@@ -183,12 +212,15 @@ def render(result: BuildResult) -> str:
          "> Todo lo que sigue es **autodeclarado por cada proyecto**. Pinax valida",
          "> forma, nunca verdad. Ninguna línea es evidencia verificada.", "",
          "| Proyecto | Propósito | Publica | Consume |", "|---|---|---|---|"]
+    def ref(xs: list[dict]) -> str:
+        partes = []
+        for r in xs:
+            texto = r["id"] + ("@" + r["version"] if r.get("version") else "")
+            partes.append(f"`{_cell(texto)}`")
+        return ", ".join(partes) or "—"
+
     for d in filas:
-        ref = lambda xs: ", ".join(
-            f"`{r['id']}{'@' + r['version'] if r.get('version') else ''}`" for r in xs
-        ) or "—"
-        prop = " ".join(str(d["proposito"]).split())
-        prop = prop[:97] + "…" if len(prop) > 98 else prop
+        prop = _corta(_cell(" ".join(str(d["proposito"]).split())))
         L += [f"| **{d['id']}** | {prop} | {ref(d.get('publica') or [])} "
               f"| {ref(d.get('consume') or [])} |"]
 
@@ -224,6 +256,67 @@ def render(result: BuildResult) -> str:
     return "\n".join(L) + "\n"
 
 
+def lint_filas(filas: list[dict]) -> list[str]:
+    """Consistencia del GRAFO cosechado, no de cada manifiesto.
+
+    Sigue siendo forma, no verdad: una referencia colgante no dice que el
+    mantenedor mienta — dice que esta cosecha no puede resolverla. Todo
+    hallazgo es relativo a las raíces que se le pasaron.
+    """
+    hallazgos: list[str] = []
+    ids = {d["id"] for d in filas}
+    publicados: dict[str, list[str]] = {}
+    for d in filas:
+        for r in d.get("publica") or []:
+            if r.get("tipo") == "contrato":
+                publicados.setdefault(r["id"], []).append(d["id"])
+            reservados = [k for k in ("uso", "requerido") if k in r]
+            if reservados:
+                hallazgos.append(
+                    f"`{d['id']}`.publica `{r['id']}` declara "
+                    f"{'/'.join(reservados)} — el schema v1 los reserva para consume"
+                )
+    for cid, duenos in sorted(publicados.items()):
+        distintos = sorted(set(duenos))
+        if len(distintos) > 1:
+            hallazgos.append(
+                f"contrato `{cid}` publicado por {len(distintos)} proyectos: "
+                f"{', '.join(distintos)} — identidad no resoluble, como un id duplicado"
+            )
+        elif len(duenos) > 1:
+            hallazgos.append(f"`{duenos[0]}` publica el contrato `{cid}` {len(duenos)} veces")
+    for d in filas:
+        for r in d.get("consume") or []:
+            if r.get("tipo") == "proyecto" and r["id"] not in ids:
+                hallazgos.append(
+                    f"`{d['id']}` consume proyecto `{r['id']}` sin manifiesto "
+                    f"en las raíces cosechadas"
+                )
+            elif r.get("tipo") == "contrato" and r["id"] not in publicados:
+                hallazgos.append(
+                    f"`{d['id']}` consume contrato `{r['id']}` que ningún "
+                    f"manifiesto cosechado publica"
+                )
+    return hallazgos
+
+
+def render_json(result: BuildResult) -> str:
+    """El mapa como grafo consultable por el consumidor agente. Mismos datos
+    que el Markdown: autodeclaraciones, forma validada, nada más."""
+    return json.dumps(
+        {
+            "schema": "pinax/mapa/v1",
+            "nota": "autodeclarado por cada proyecto; Pinax valida forma, nunca verdad",
+            "proyectos": result.filas,
+            "missing_manifest": sorted(result.faltan),
+            "hallazgos": result.hallazgos,
+        },
+        ensure_ascii=False,
+        indent=2,
+        sort_keys=True,
+    ) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="pinax", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -231,11 +324,14 @@ def main(argv: list[str] | None = None) -> int:
     b = sub.add_parser("build")
     b.add_argument("roots", nargs="+", type=Path)
     b.add_argument("--output", type=Path)
+    b.add_argument("--format", choices=("markdown", "json"), default="markdown")
     b.add_argument(
         "--allow-invalid", action="store_true",
         help="escribir el mapa igual si hay manifiestos inválidos o ids duplicados "
              "(mapa parcial); sin esto, build falla con exit≠0 y no escribe nada",
     )
+    li = sub.add_parser("lint")
+    li.add_argument("roots", nargs="+", type=Path)
     args = ap.parse_args(argv)
 
     if args.cmd == "validate":
@@ -255,6 +351,17 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"{p}: OK")
         return 1 if fallos else 0
 
+    if args.cmd == "lint":
+        result = collect(args.roots)
+        hallazgos = result.hallazgos + lint_filas(result.filas)
+        for h in hallazgos:
+            print(h)
+        if hallazgos:
+            print(f"lint: {len(hallazgos)} hallazgo(s) — relativos a las raíces cosechadas")
+            return 1
+        print("lint: OK — grafo cosechado consistente")
+        return 0
+
     result = collect(args.roots)
     if not result.ok and not args.allow_invalid:
         for h in result.hallazgos:
@@ -266,7 +373,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    mapa = render(result)
+    mapa = render_json(result) if args.format == "json" else render(result)
     if args.output:
         args.output.write_text(mapa)
         print(f"MAPA escrito en {args.output}")

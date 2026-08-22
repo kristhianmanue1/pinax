@@ -52,11 +52,41 @@ Eso es esto: un catálogo, no un núcleo.
 
 ```bash
 python3 scripts/pinax.py validate <manifiesto>...
-python3 scripts/pinax.py build <raíz>... --output MAPA.md
+python3 scripts/pinax.py build <raíz>... --output MAPA.md [--format markdown|json]
+python3 scripts/pinax.py lint <raíz>...
 python3 tests/test_pinax.py
 ```
 
-Dependencias: PyYAML, jsonschema.
+Dependencias: PyYAML, jsonschema. Ese `python3` es el del sistema: el
+`.venv/` de la raíz existe sólo para AN-KLA y **no** tiene PyYAML ni
+jsonschema.
+
+`validate` comprueba forma contra el schema. `lint` comprueba la
+consistencia del **grafo cosechado** (referencias de `consume` sin
+manifiesto en las raíces, contratos `publica` duplicados entre proyectos,
+`uso`/`requerido` en `publica`): sigue siendo forma, no verdad, y todo
+hallazgo es relativo a las raíces recibidas. Un hijo de raíz cuenta como
+proyecto si trae manifiesto o `.git` propio; un directorio sin ninguna de
+las dos no se lista como `missing_manifest`.
+
+## Verificación
+
+```bash
+python3 scripts/check_sizes.py
+python3 scripts/check_plans.py
+python3 tests/test_pinax.py
+python3 -m unittest discover -s tests
+```
+
+Gate de skevi adoptado sin editar sus scripts; los valores de este proyecto
+se declaran en `skevi-gate.json` (ADR-006 de skevi). Salida `OK` o `BLOQ`
+con código de salida distinto de cero. Córrelo antes de declarar terminado
+cualquier cambio y registra su salida como evidencia. Procedencia de la
+adopción y de cada exención declarada:
+`docs/adopcion-gate-skevi-2026-08-21.md`.
+
+`check_plans` queda inactivo mientras no exista la clave `plans` en
+`skevi-gate.json` — fail-closed por ausencia, nunca error.
 
 ## Adopción de un proyecto
 
@@ -74,7 +104,10 @@ esperar a tenerlos todos.**
 ## Estado
 
 Piloto. Manifiestos de Argos y Epistates confirmados, revisados
-adversarialmente y adoptados en sus repos.
+adversarialmente y adoptados en sus repos. Pinax declara el suyo en
+`project-manifest.yaml`: el catálogo no se exime del contrato que define.
+Aparecer en el mapa depende de la raíz que reciba `build`, y este repo vive
+fuera de la que documenta el README — pendiente declarado en el manifiesto.
 
 Registro narrativo del ecosistema (decisiones, no manifiestos):
 `kratos/docs/auditorias/` — orden cronológico por nombre de archivo. Útil para
