@@ -22,11 +22,13 @@
 .venv/bin/python -m an_kla --project-root . status           # anota la revisión
 .venv/bin/python -m an_kla --project-root . verify           # si falla: NO operar; reportar
 .venv/bin/python -m an_kla --project-root . checkpoint show
-.venv/bin/python -m an_kla --project-root . resume --query "<necesidad concreta>" --budget 4096
+.venv/bin/python -m an_kla --project-root . resume --query "<necesidad concreta>" --budget 8192
 ```
 
 `verify` es condición de operación: si la integridad falla, Pinax no trabaja
-sobre memoria sospechosa — reporta la discrepancia.
+sobre memoria sospechosa — reporta la discrepancia. El budget 8192 es el
+mínimo observado para snapshots recientes (~8 KB en rev 25-27); con 4096 el
+resume falla cerrado por `budget_too_small_for_resume_snapshot`.
 
 ## Recuperación (lectura)
 
@@ -78,6 +80,15 @@ Desde **beta.16** (ADR-0038) el checkpoint admite `source_state`
 observo Git y lo declaro; el CLI no ejecuta Git. Primer uso:
 checkpoint rev 12 (2026-08-20, head `66451004`).
 
+El working-state exige el set de claves **exacto** — incluye
+`supersedes_checkpoint` (el digest del checkpoint padre): omitirla falla
+como `invalid_working_state` sin señalar cuál falta. La forma canónica de
+la autoridad (`an-kla/checkpoint-authority-v1`) también es cerrada:
+`issuer` con `kind`/`id`/`configuration_fingerprint` (digest sha256 del
+identificador del agente sirve), `evidence` con items
+`kind`/`id`/`resolution`, `scope` con `operation: checkpoint` y `fields`
+ordenados por bytes UTF-8.
+
 ## Lecciones de método registradas
 
 1. Toda afirmación de **estado** ("falta X", "está pendiente Y") se
@@ -100,3 +111,32 @@ checkpoint rev 12 (2026-08-20, head `66451004`).
    exactamente como `caller_asserted`. Lección dentro de la lección:
    una restricción observada en una versión no es una regla de diseño —
    verificar contra el ADR/changelog antes de normar.
+7. `captured_at` (y todo timestamp del checkpoint) exige el formato
+   canónico **con seis dígitos fraccionarios**
+   (`2026-08-22T12:26:24.000000Z`): un RFC3339 "correcto" sin
+   microsegundos falla como `invalid_working_state` sin señalar el campo.
+   (Error real aquí, 2026-08-22.)
+8. En la autoridad del checkpoint, `scope.fields` va **ordenado por bytes
+   UTF-8**: `"blockers"` antes que `"captured_at"` — el validador compara
+   `item.encode("utf-8")`, no el orden alfabético del editor. Con los
+   ocho campos en minúsculas coinciden, pero no fiarse del autocompletado.
+   El rechazo es `invalid_checkpoint_authority` sin señalar el orden.
+   (Error real aquí, 2026-08-22.)
+9. `supersedes_checkpoint` se copia **del output de `checkpoint show`**
+   (campo `checkpoint_digest`), nunca se transcribe a mano: un sufijo
+   espurio de un carácter (`…0e4b` por `…0e4`) pasa invisible a la vista
+   y falla como `invalid_working_state` genérico. (Error real aquí,
+   2026-08-22.)
+10. Cuando el CLI sólo dice `invalid_working_state` o
+    `invalid_checkpoint_authority`, validar el objeto directamente contra
+    la política y leer el traceback — señala la línea y el campo exactos
+    (`_digest(state["supersedes_checkpoint"])` en nuestro caso):
+
+    ```bash
+    .venv/bin/python -c "
+    import json
+    from an_kla.checkpoint_policy import validate_working_state
+    validate_working_state(json.load(open('<working-state>')))"
+    ```
+
+    Usada aquí, 2026-08-22; ahorró tres rondas de adivinanza.

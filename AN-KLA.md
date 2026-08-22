@@ -117,7 +117,7 @@ python3 -m an_kla --project-root . status
 python3 -m an_kla --project-root . verify
 python3 -m an_kla --project-root . checkpoint show
 python3 -m an_kla --project-root . resume \
-  --query "<necesidad concreta>" --budget 4096
+  --query "<necesidad concreta>" --budget 8192
 ```
 
 No dependas de rutas internas como `working-state.json`: el checkpoint del
