@@ -40,7 +40,7 @@ publica:
 
 consume:
   - { tipo: proyecto, id: an-kla-memory, uso: "continuidad entre sesiones y checkpoint de arranque de este repo; el protocolo y el validador no dependen de ella", requerido: false }
-  - { tipo: contrato, id: epistates/task-card, version: v1, uso: "todo encargo a otro proyecto sale como task-card validado; es política de este repo, no requisito del protocolo", requerido: false }
+  - { tipo: contrato, id: epistates/task-card/v1, uso: "todo encargo a otro proyecto sale como task-card validado; es política de este repo, no requisito del protocolo", requerido: false }
 
 descubrimiento:
   argv: ["python3", "scripts/pinax.py", "--help"]
