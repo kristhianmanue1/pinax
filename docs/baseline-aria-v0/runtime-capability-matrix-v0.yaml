@@ -1,0 +1,69 @@
+# Entregable D — Esqueleto de Runtime Capability Matrix (v0)
+
+Estructura para RECIBIR requisitos; ninguna celda está rellenada. Las
+categorías son vocabulario inicial, NO requisitos confirmados.
+
+Reglas de la matriz:
+
+1. Cada celda expresa: `REQUIRED | OPTIONAL | FORBIDDEN | NOT_APPLICABLE |
+   UNRESOLVED` + enlaces de evidencia/provenance que justifiquen la
+   clasificación.
+2. Dimensiones separadas: componente ≠ plano ≠ capability. Una capability
+   puede declarar su PROVEEDOR esperado (`internal | external | adapted`)
+   sin identificar implementación — la celda no asume
+   capability = implementación interna del runtime.
+3. Prohibido rellenar esta matriz desde Pinax: las respuestas nacen de
+   análisis independientes por proyecto (ver protocolo-runtime-contract-v0.md).
+
+```yaml
+schema: pinax/runtime-capability-matrix/v0
+estado: SKELETON — sin requisitos
+participantes:
+  derivacion: [an-kla, skopos, agora]
+  validacion_fuera_de_muestra: [epistates, argos]
+  pruebas_especializades_posteriores:
+    - { componente: llavero, capabilities: [secrets] }
+    - { componente: glosomata, capabilities: [session, channel, interruption, io] }
+  excluidos:
+    - { componente: ektel, motivo: evita disear el contrato desde capacidades existentes de EKTEL }
+    - { componente: propylon, motivo: sin implementacion suficiente (PROPOSED_COMPONENT) }
+celula:
+  forma:
+    value: REQUIRED | OPTIONAL | FORBIDDEN | NOT_APPLICABLE | UNRESOLVED
+    proveedor_esperado: internal | external | adapted | unresolved
+    evidencia: []          # enlaces a docs/commits/manifiestos
+    provenance: VERIFIED | DECLARED | INFERRED | PROPOSED | UNKNOWN
+categorias:
+  filesystem: {}
+  subprocess_process_lifecycle: {}
+  network: {}
+  secrets:
+    secret_storage: {}
+    secret_resolution: {}
+    secret_injection: {}
+    secret_scope: {}
+    secret_revocation: {}
+    secret_exposure_boundary: {}
+  environment: {}
+  resource_limits: {}
+  isolation: {}
+  workspace: {}
+  identity: {}
+  authorization: {}
+  cancellation:
+    nota: incluye via de interrupcion; gate reachability aplica
+  timeout: {}
+  persistence: {}
+  evidence_capture: {}
+  logging: {}
+  provenance: {}
+  gates: {}
+  gate_reachability:
+    nota: gate existence vs reachability vs unavoidable enforcement
+  deterministic_execution: {}
+  replay: {}
+  concurrency: {}
+  capability_discovery: {}
+  capability_negotiation: {}
+filas_pendientes: [an-kla, skopos, agora, epistates, argos, llavero, glosomata]
+```
