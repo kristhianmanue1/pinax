@@ -1,0 +1,74 @@
+{
+  "schema": "epistates/task-card/v1",
+  "task_id": "piloto-tmux-docs",
+  "objective": "Validar de forma reversible el protocolo tmux mediante un cambio documental acotado, sin publicar ni ejecutar operaciones Git protegidas.",
+  "target": {
+    "repository": "owner/proyecto-piloto",
+    "base_sha": "0000000000000000000000000000000000000000",
+    "branch": "codex/piloto-tmux-docs",
+    "worktree": "/ruta/absoluta/proyecto-piloto"
+  },
+  "role": "developer",
+  "authority": {
+    "grant_id": "maintainer-piloto-tmux-docs",
+    "granted_by": "maintainer",
+    "granted_actions": [
+      "read",
+      "edit",
+      "run_checks"
+    ],
+    "protected_operations_authorized": []
+  },
+  "allowed_paths": [
+    "docs/piloto/"
+  ],
+  "allowed_actions": [
+    "read",
+    "edit",
+    "run_checks"
+  ],
+  "forbidden_operations": [
+    "commit",
+    "push",
+    "open_pr",
+    "merge",
+    "release",
+    "install_dependencies",
+    "change_scope",
+    "git_reset",
+    "create_branch",
+    "delete_branch",
+    "create_worktree",
+    "remove_worktree"
+  ],
+  "inputs": [
+    "AGENTS.md",
+    "docs/orquetacionMultiagenteTemporal/orquestacion-codex-opencode-tmux.md"
+  ],
+  "checks": [
+    {
+      "check_id": "unit_tests",
+      "expected": "exit 0"
+    },
+    {
+      "check_id": "diff_check",
+      "expected": "exit 0"
+    }
+  ],
+  "evidence": {
+    "report_format": "rag/v1",
+    "required": [
+      "worktree_status",
+      "diff_check",
+      "check_results"
+    ]
+  },
+  "delivery": "Autocorregir el candidato, obtener PROCEED de una revisión fresca y aplicar fix-and-retry cuando corresponda; después guardar reporte RAG y adversarial final en las rutas del handoff, enviar el AGENT_DONE exacto y detenerse sin commit. Nunca entregar con adversarial pendiente.",
+  "stop_condition": "Detenerse ante contradicción entre tarjeta, handoff o AGENTS.md; no ampliar alcance ni ejecutar operaciones protegidas.",
+  "new_decision_required_for": [
+    "uso de --auto",
+    "dependencias nuevas",
+    "ampliación de alcance",
+    "push, PR, merge, tag o release"
+  ]
+}
