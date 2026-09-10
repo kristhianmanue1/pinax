@@ -110,9 +110,11 @@ Aparecer en el mapa depende de la raíz que reciba `build`, y este repo vive
 fuera de la que documenta el README — pendiente declarado en el manifiesto.
 
 Registro narrativo del ecosistema (decisiones, no manifiestos):
-`kratos/docs/auditorias/` — orden cronológico por nombre de archivo. Útil para
-trabajo a nivel de ecosistema (adopción, mapa); un agente aislado en un solo
-proyecto no necesita leerlo.
+`~/www/kratos/docs/auditorias/` — orden cronológico por nombre de archivo.
+Fuera de `/aria`; conservado como fotografía histórica (decisión del Mediador
+2026-08-13 retiró el auditor cross-project; sin entradas posteriores a esa
+fecha). Útil para trabajo a nivel de ecosistema (adopción, mapa); un agente
+aislado en un solo proyecto no necesita leerlo.
 
 ## Alcance de `consume`
 
