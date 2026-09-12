@@ -12,8 +12,8 @@ supone y falla — con consecuencias reales ya registradas.
 
 ```bash
 python3 scripts/pinax.py validate fixtures/argos.project-manifest.yaml
-python3 scripts/pinax.py build ../aria --output MAPA.md          # o --format json
-python3 scripts/pinax.py lint ../aria                            # consistencia del grafo
+python3 scripts/pinax.py build .. --output MAPA.md               # o --format json
+python3 scripts/pinax.py lint ..                                 # consistencia del grafo
 python3 tests/test_pinax.py
 ```
 

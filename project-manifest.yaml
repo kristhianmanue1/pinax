@@ -59,6 +59,5 @@ fronteras_de_confianza:
 pospuesto:
   - "verificación opt-in del argv de descubrimiento, sólo bajo autorización explícita sobre el argv exacto, shell=False, cwd controlado y límites: propuesta, no autorizada"
   - observación de versión, tag y revisión de Git al cosechar, anotadas como dato derivado
-  - "topología de escaneo: hoy build sólo cubre las raíces que recibe, y este repo vive fuera de la raíz que documenta su propio README"
   - "hogar canónico del borrador de orquestación multiagente que hoy vive fuera de Git: requiere análisis, ronda adversarial y autorizaciones propias"
   - v2 del schema y su migración explícita

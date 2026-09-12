@@ -85,8 +85,14 @@ cualquier cambio y registra su salida como evidencia. Procedencia de la
 adopción y de cada exención declarada:
 `docs/adopcion-gate-skevi-2026-08-21.md`.
 
-`check_plans` queda inactivo mientras no exista la clave `plans` en
-`skevi-gate.json` — fail-closed por ausencia, nunca error.
+`check_plans` es opt-in: mientras no exista la clave `plans` en
+`skevi-gate.json`, queda `INACTIVE`, sale con código 0 y no verifica planes.
+Una clave declarada pero inválida sí produce `BLOQ`.
+Por procedencia, la copia vigente del script conserva el mensaje legado
+`OK — sin planes declarados (fail-closed: clave 'plans' ausente)`; en evidencia
+de Pinax ese resultado se traduce a `INACTIVE — 0 planes verificados` y nunca
+se cuenta como gate de planes en verde. Corregir el literal pertenece primero
+a skevi y después a una adopción versionada, no a una edición local aislada.
 
 ## Adopción de un proyecto
 
@@ -106,8 +112,8 @@ esperar a tenerlos todos.**
 Piloto. Manifiestos de Argos y Epistates confirmados, revisados
 adversarialmente y adoptados en sus repos. Pinax declara el suyo en
 `project-manifest.yaml`: el catálogo no se exime del contrato que define.
-Aparecer en el mapa depende de la raíz que reciba `build`, y este repo vive
-fuera de la que documenta el README — pendiente declarado en el manifiesto.
+Aparecer en el mapa depende de la raíz que reciba `build`. El README usa `..`
+para cosechar la raíz `/aria`, que incluye este repositorio y sus hermanos.
 
 Registro narrativo del ecosistema (decisiones, no manifiestos):
 `~/www/kratos/docs/auditorias/` — orden cronológico por nombre de archivo.
@@ -131,8 +137,9 @@ se relacionan con cuáles*, no *qué librerías instala cada uno*.
 
 ## Memoria y política de agentes
 
-Este proyecto usa memoria local AN-KLA (instalada 2026-08-20; versión local
-observada `0.1.0b16` al 2026-08-21, `.an-kla/` gitignored). Antes de trabajo material:
+Este proyecto usa memoria local AN-KLA (instalada 2026-08-20; `.an-kla/`
+gitignored). La versión operativa se consulta en el entorno local; las menciones
+a beta.16 en la guía son antecedentes fechados, no la versión vigente. Antes de trabajo material:
 `docs/guia-an-kla-pinax.md` — su protocolo de arranque (`status → verify →
 checkpoint show → resume`) es **condición de operación**: si `verify`
 falla, no se opera y se reporta. Cómo se despachan y aceptan encargos:

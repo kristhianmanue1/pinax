@@ -274,6 +274,11 @@ Ejecutado tras escribir este registro, mismo día:
 * `tests/test_pinax.py` → 51/51 `PASS`. `unittest discover` → 62 tests `OK`.
 * `check_sizes.py` → `OK`. `check_plans.py` → `OK` (fail-closed por
   ausencia de `plans`).
+
+**Aclaración de interpretación (2026-09-11):** la línea anterior conserva la
+salida literal observada el 2026-09-10, pero `check_plans` no inspeccionó ningún
+plan. En la terminología operativa vigente de Pinax equivale a
+`INACTIVE — 0 planes verificados`, no a un gate de planes en verde.
 * Matriz congelada íntegra: `sha256(runtime-capability-matrix-v0.yaml) =
   8e7e373aa2cc9d00da9a1202aa2cea65def1f309f585d50ee8d6f1e380297598`,
   igual al registro de congelación.

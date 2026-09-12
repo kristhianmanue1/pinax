@@ -25,9 +25,16 @@ ADR-014. Adoptar exige copiar **ambos** scripts: comparten config y
 - Archivos canónicos presentes (`required` de `skevi-gate.json`).
 - Ningún Markdown operativo suelto en la raíz salvo los declarados.
 - Límites: `AGENTS.md` 200, `README.md` 300, cualquier otro texto 800.
-- `check_plans` **inactivo**: sin clave `plans` no comprueba nada. Es
-  fail-closed por ausencia, no un error. Se activará si algún día hay
-  `docs/plans/`.
+- `check_plans` **opt-in e inactivo**: sin clave `plans` no comprueba nada,
+  sale con código 0 y debe reportarse como `INACTIVE`, no como evidencia de
+  planes verificados. Una clave declarada pero inválida sí produce `BLOQ`.
+  Se activará si algún día hay un corpus real en `docs/plans/`.
+
+La copia vigente conserva el literal legado `OK — sin planes declarados
+(fail-closed: clave 'plans' ausente)`. Pinax lo traduce en sus cierres como
+`INACTIVE — 0 planes verificados`; no modifica el script copiado de forma
+aislada. Un cambio del literal debe originarse en skevi y adoptarse después con
+procedencia versionada.
 
 ## Exenciones declaradas y su razón
 
